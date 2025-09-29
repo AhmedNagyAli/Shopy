@@ -13,7 +13,10 @@ class HomeController extends Controller
     {
         return Inertia::render('Home/Home', [
             'products' => Product::with('categories')->latest()->take(10)->get(),
-            'categories' => Category::all(),
+            'categories' => Category::with(['products' => function ($q) {
+                $q->latest()->take(1); // only latest product
+            }])->get(),
+            //'category'=>Category::latest()->first(),
         ]);
     }
 }
