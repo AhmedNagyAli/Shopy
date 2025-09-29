@@ -6,7 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttributeValue extends Model
 {
-    protected $fillable = ['attribute_id', 'value', 'slug'];
+    protected $fillable = [
+    'attribute_id', 
+    'value', 
+    'slug',
+    'color_code', 
+    'extra_price', 
+    'sort_order'];
 
     public function attribute()
     {
