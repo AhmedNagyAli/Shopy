@@ -41,6 +41,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class);
     }
+    public function wishlist()
+{
+    return $this->belongsToMany(Product::class, 'wishlists')
+                ->withTimestamps();
+}
+
 
     /**
      * Get the attributes that should be cast.
