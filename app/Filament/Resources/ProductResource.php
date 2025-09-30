@@ -6,7 +6,8 @@ use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Models\Product;
 use App\Models\Category;
-use App\Models\Attribute;
+use App\Models\AttributeValue;
+use App\Models\ProductVariant;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,6 +16,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class ProductResource extends Resource
 {
@@ -34,6 +36,7 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
+                // ───── Product Information ─────
                 Forms\Components\Section::make('Product Information')
                     ->description('Basic product details')
                     ->schema([
@@ -41,12 +44,12 @@ class ProductResource extends Resource
                             ->required()
                             ->maxLength(255)
                             ->live(onBlur: true)
-                            // ->afterStateUpdated(function ($state, $set) {
-                            //     if (filled($state) && !$get('is_slug_manual')) {
-                            //         $set('slug', Str::slug($state));
-                            //     }
-                            // })
-                            ->placeholder('Enter product name'),
+                            ->placeholder('Enter product name')
+                            ->afterStateUpdated(function ($set, $state, $operation) {
+                                if ($operation === 'create' || !$set('is_slug_manual', false)) {
+                                    $set('slug', Str::slug($state));
+                                }
+                            }),
 
                         Forms\Components\TextInput::make('slug')
                             ->required()
@@ -60,6 +63,7 @@ class ProductResource extends Resource
                                         $name = $get('name');
                                         if (filled($name)) {
                                             $set('slug', Str::slug($name));
+                                            $set('is_slug_manual', false);
                                         }
                                     })
                             ),
@@ -72,7 +76,9 @@ class ProductResource extends Resource
                             ->columnSpanFull()
                             ->fileAttachmentsDirectory('product-attachments')
                             ->toolbarButtons([
-                                'blockquote', 'bold', 'bulletList', 'codeBlock', 'h2', 'h3', 'italic', 'link', 'orderedList', 'redo', 'strike', 'underline', 'undo',
+                                'blockquote', 'bold', 'bulletList', 'codeBlock',
+                                'h2', 'h3', 'italic', 'link', 'orderedList',
+                                'redo', 'strike', 'underline', 'undo',
                             ]),
 
                         Forms\Components\TextInput::make('price')
@@ -82,10 +88,10 @@ class ProductResource extends Resource
                             ->step(0.01)
                             ->minValue(0)
                             ->maxValue(999999.99)
-                            ->helperText('Base price for the product'),
+                            ->helperText('Base price for the product (used if no variants exist)'),
 
                         Forms\Components\FileUpload::make('main_image')
-                            ->label('Main Image')
+                            ->label('Main Product Image')
                             ->image()
                             ->directory('products/main')
                             ->maxSize(5120)
@@ -93,7 +99,15 @@ class ProductResource extends Resource
                             ->imageCropAspectRatio('1:1')
                             ->imageResizeTargetWidth('800')
                             ->imageResizeTargetHeight('800')
-                            ->helperText('Main product image (max 5MB)'),
+                            ->getUploadedFileNameForStorageUsing(
+                                fn (TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalName())
+                                    ->prepend('product-main-'),
+                            )
+                            ->helperText('Main product image (max 5MB)')
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                            ->validationMessages([
+                                'maxSize' => 'The image must not exceed 5MB.',
+                            ]),
 
                         Forms\Components\Toggle::make('is_active')
                             ->required()
@@ -102,8 +116,9 @@ class ProductResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Categories & Attributes')
-                    ->description('Organize your product')
+                // ───── Categories ─────
+                Forms\Components\Section::make('Categories')
+                    ->description('Organize your product into categories')
                     ->schema([
                         Forms\Components\Select::make('categories')
                             ->relationship('categories', 'name')
@@ -121,33 +136,116 @@ class ProductResource extends Resource
                                 Forms\Components\Textarea::make('description')
                                     ->maxLength(65535),
                             ])
-                            ->createOptionUsing(function (array $data) {
-                                $category = Category::create($data);
-                                return $category->id;
-                            }),
+                            ->createOptionUsing(fn (array $data) => Category::create($data)->id),
+                    ]),
 
-                        Forms\Components\Select::make('attributes')
-                            ->relationship('attributes', 'name')
-                            ->multiple()
-                            ->preload()
-                            ->searchable()
-                            ->helperText('Attributes available for this product')
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('name')
+                // ───── Variants ─────
+                Forms\Components\Section::make('Product Variants')
+                    ->description('Define product variations with attributes like Color: Red, Size: XL')
+                    ->schema([
+                        Forms\Components\Repeater::make('variants')
+                            ->relationship('variants')
+                            ->schema([
+                                // Variant Image
+                                Forms\Components\FileUpload::make('image')
+                                    ->label('Variant Image')
+                                    ->image()
+                                    ->directory('products/variants')
+                                    ->maxSize(5120)
+                                    ->imageResizeMode('cover')
+                                    ->imageCropAspectRatio('1:1')
+                                    ->imageResizeTargetWidth('600')
+                                    ->imageResizeTargetHeight('600')
+                                    ->getUploadedFileNameForStorageUsing(
+                                        fn (TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalName())
+                                            ->prepend('variant-'),
+                                    )
+                                    ->helperText('Variant-specific image (max 5MB)')
+                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                                    ->columnSpanFull(),
+
+                                // Variant Details
+                                Forms\Components\TextInput::make('sku')
+                                    ->label('SKU')
                                     ->required()
-                                    ->maxLength(255),
-                                Forms\Components\TextInput::make('slug')
+                                    ->maxLength(50)
+                                    ->unique(
+                                        table: 'product_variants',
+                                        column: 'sku',
+                                        ignoreRecord: true
+                                    )
+                                    ->helperText('Unique stock keeping unit'),
+
+                                Forms\Components\TextInput::make('price')
+                                    ->label('Variant Price')
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->prefix('$')
+                                    ->helperText('Leave empty to use product base price'),
+
+                                Forms\Components\TextInput::make('stock')
+                                    ->label('Stock Quantity')
+                                    ->numeric()
                                     ->required()
-                                    ->maxLength(255)
-                                    ->unique('attributes', 'slug'),
+                                    ->minValue(0)
+                                    ->default(0),
+
+                                // Attribute Values
+                                Forms\Components\Select::make('values')
+                                    ->label('Attribute Values')
+                                    ->multiple()
+                                    ->relationship(
+                                        name: 'values',
+                                        titleAttribute: 'value',
+                                        modifyQueryUsing: fn ($query) => $query->with('attribute')
+                                    )
+                                    ->getOptionLabelFromRecordUsing(fn (AttributeValue $record) => 
+                                        $record->attribute->name . ': ' . $record->value
+                                    )
+                                    ->preload()
+                                    ->searchable()
+                                    ->helperText('Select attribute values for this variant')
+                                    ->required()
+                                    ->minItems(1)
+                                    ->columnSpanFull()
+                                    ->createOptionForm([
+                                        Forms\Components\Select::make('attribute_id')
+                                            ->relationship('attribute', 'name')
+                                            ->required()
+                                            ->preload()
+                                            ->searchable(),
+                                        Forms\Components\TextInput::make('value')
+                                            ->required()
+                                            ->maxLength(255),
+                                    ])
+                                    ->createOptionUsing(function (array $data) {
+                                        return AttributeValue::create($data)->id;
+                                    }),
                             ])
-                            ->createOptionUsing(function (array $data) {
-                                $attribute = Attribute::create($data);
-                                return $attribute->id;
-                            }),
+                            ->columns(2)
+                            ->columnSpanFull()
+                            ->collapsible()
+                            ->itemLabel(fn (array $state): string => 
+                                ($state['sku'] ?? 'New Variant') . 
+                                (isset($state['values']) && count($state['values']) ? 
+                                    ' (' . collect($state['values'])->map(function ($valueId) {
+                                        $value = AttributeValue::with('attribute')->find($valueId);
+                                        return $value ? $value->attribute->name . ': ' . $value->value : '';
+                                    })->filter()->join(', ') . ')' : '')
+                            )
+                            ->createItemButtonLabel('Add Variant')
+                            ->deleteAction(
+                                fn (Forms\Components\Actions\Action $action) => $action->requiresConfirmation(),
+                            )
+                            ->reorderable()
+                            ->cloneable()
+                            ->grid(2)
+                            ->minItems(0)
+                            ->defaultItems(0),
                     ])
-                    ->columns(2),
+                    ->collapsed(fn ($operation) => $operation === 'edit'),
 
+                // ───── Stats ─────
                 Forms\Components\Section::make('Product Statistics')
                     ->schema([
                         Forms\Components\Placeholder::make('variants_count')
@@ -161,10 +259,6 @@ class ProductResource extends Resource
                         Forms\Components\Placeholder::make('categories_count')
                             ->label('Categories')
                             ->content(fn ($record) => $record?->categories_count ?? '0'),
-
-                        Forms\Components\Placeholder::make('attributes_count')
-                            ->label('Attributes')
-                            ->content(fn ($record) => $record?->attributes_count ?? '0'),
 
                         Forms\Components\Placeholder::make('created_at')
                             ->label('Created At')
@@ -184,7 +278,7 @@ class ProductResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('main_image')
-                    ->label('Image')
+                    ->label('Main Image')
                     ->circular()
                     ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->name) . '&color=7F9CF5&background=EBF4FF'),
 
@@ -214,12 +308,29 @@ class ProductResource extends Resource
                     ->alignCenter()
                     ->color(fn ($state) => $state > 0 ? 'success' : 'gray'),
 
-                Tables\Columns\TextColumn::make('images_count')
-                    ->label('Images')
-                    ->counts('images')
-                    ->sortable()
+                Tables\Columns\TextColumn::make('variants_with_images_count')
+                    ->label('Variants with Images')
+                    ->getStateUsing(fn ($record) => $record->variants->whereNotNull('image')->count())
                     ->alignCenter()
                     ->color('warning'),
+
+                Tables\Columns\TextColumn::make('variants_attributes')
+                    ->label('Available Attributes')
+                    ->getStateUsing(function ($record) {
+                        if ($record->variants_count === 0) return 'No variants';
+                        
+                        $attributes = $record->variants->flatMap(function ($variant) {
+                            return $variant->values->map(function ($value) {
+                                return $value->attribute->name . ': ' . $value->value;
+                            });
+                        })->unique()->sort();
+                        
+                        return $attributes->join(', ');
+                    })
+                    ->limit(50)
+                    ->tooltip(function ($state) {
+                        return $state;
+                    }),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean()
@@ -249,6 +360,16 @@ class ProductResource extends Resource
                 Tables\Filters\Filter::make('has_variants')
                     ->label('Has Variants')
                     ->query(fn (Builder $query): Builder => $query->whereHas('variants')),
+
+                Tables\Filters\Filter::make('has_variants_with_images')
+                    ->label('Has Variants with Images')
+                    ->query(fn (Builder $query): Builder => $query->whereHas('variants', function ($query) {
+                        $query->whereNotNull('image');
+                    })),
+
+                Tables\Filters\Filter::make('no_variants')
+                    ->label('No Variants')
+                    ->query(fn (Builder $query): Builder => $query->whereDoesntHave('variants')),
 
                 Tables\Filters\Filter::make('has_images')
                     ->label('Has Additional Images')
@@ -304,7 +425,7 @@ class ProductResource extends Resource
 
                     Tables\Actions\Action::make('manageVariants')
                         ->label('Manage Variants')
-                        ->url(fn (Product $record): string => ProductVariantResource::getUrl('index', ['product_id' => $record->id]))
+                        ->url(fn (Product $record): string => \App\Filament\Resources\ProductVariantResource::getUrl('index', ['product_id' => $record->id]))
                         ->icon('heroicon-o-squares-2x2')
                         ->color('warning')
                         ->openUrlInNewTab(),
@@ -316,7 +437,7 @@ class ProductResource extends Resource
                         ->action(function (Product $record) {
                             $newProduct = $record->replicate();
                             $newProduct->name = $record->name . ' (Copy)';
-                            $newProduct->slug = $record->slug . '-copy';
+                            $newProduct->slug = $record->slug . '-copy-' . Str::random(6);
                             $newProduct->save();
 
                             // Duplicate categories
@@ -324,14 +445,24 @@ class ProductResource extends Resource
                                 $newProduct->categories()->attach($record->categories->pluck('id'));
                             }
 
-                            // Duplicate attributes
-                            if ($record->attributes->count() > 0) {
-                                $newProduct->attributes()->attach($record->attributes->pluck('id'));
+                            // Duplicate variants with their attributes and images
+                            if ($record->variants->count() > 0) {
+                                foreach ($record->variants as $variant) {
+                                    $newVariant = $variant->replicate();
+                                    $newVariant->product_id = $newProduct->id;
+                                    $newVariant->sku = $variant->sku . '-copy-' . Str::random(6);
+                                    $newVariant->save();
+
+                                    // Duplicate variant attributes
+                                    if ($variant->values->count() > 0) {
+                                        $newVariant->values()->attach($variant->values->pluck('id'));
+                                    }
+                                }
                             }
                         })
                         ->requiresConfirmation()
                         ->modalHeading('Duplicate Product')
-                        ->modalDescription('This will create a copy of this product with the same categories and attributes.'),
+                        ->modalDescription('This will create a copy of this product with the same categories and variants.'),
 
                     Tables\Actions\Action::make('toggleActive')
                         ->label(fn ($record) => $record->is_active ? 'Deactivate' : 'Activate')
@@ -440,7 +571,6 @@ class ProductResource extends Resource
     {
         return [
             RelationManagers\ImagesRelationManager::class,
-            RelationManagers\VariantsRelationManager::class,
         ];
     }
 
@@ -456,7 +586,7 @@ class ProductResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->withCount(['variants', 'images', 'categories', 'attributes']);
+            ->withCount(['variants', 'images', 'categories']);
     }
 
     public static function getNavigationBadge(): ?string

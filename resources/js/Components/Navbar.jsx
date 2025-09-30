@@ -1,108 +1,177 @@
-import { useState } from "react";
-import { Menu, User, X } from "lucide-react"; // modern icons
+import React, { useEffect, useRef, useState } from "react";
+import { usePage, router } from "@inertiajs/react";
+import { Menu as MenuIcon, User as UserIcon, X } from "lucide-react";
 
-export default function Navbar({ categories, isAuth = false, user = null }) {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+export default function Navbar({ categories = [] }) {
+  const { auth } = usePage().props;
+  const isAuth = !!auth?.user;
+  const user = auth?.user;
 
-    return (
-        <nav className="w-full bg-gray-900 text-white shadow-lg sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                {/* Left: User menu */}
-                <div className="flex items-center space-x-4">
-                    {!isAuth ? (
-                        <a
-                            href="/login"
-                            className="flex items-center space-x-2 hover:text-cyan-400 transition-colors"
-                        >
-                            <User size={22} />
-                            <span className="text-sm font-medium">Login / Register</span>
-                        </a>
-                    ) : (
-                        <div className="relative group">
-                            <button className="flex items-center space-x-2 hover:text-cyan-400 transition-colors">
-                                <User size={22} />
-                                <span className="text-sm font-medium">{user?.name}</span>
-                            </button>
-                            {/* Dropdown */}
-                            <div className="absolute left-0 mt-2 w-40 bg-gray-800 text-white rounded-lg shadow-lg hidden group-hover:block">
-                                <a
-                                    href="/dashboard"
-                                    className="block px-4 py-2 text-sm hover:bg-gray-700"
-                                >
-                                    Dashboard
-                                </a>
-                                <a
-                                    href="/orders"
-                                    className="block px-4 py-2 text-sm hover:bg-gray-700"
-                                >
-                                    My Orders
-                                </a>
-                                <a
-                                    href="/logout"
-                                    className="block px-4 py-2 text-sm hover:bg-gray-700 text-red-400"
-                                >
-                                    Logout
-                                </a>
-                            </div>
-                        </div>
-                    )}
-                </div>
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const btnRef = useRef(null);
 
-                {/* Center: Categories */}
-                <div className="hidden md:flex space-x-8">
-                    {categories.slice(0, 5).map((cat) => (
-                        <a
-                            key={cat.id}
-                            href={`/categories/${cat.slug}`}
-                            className="text-sm font-medium hover:text-cyan-400 transition-colors"
-                        >
-                            {cat.name}
-                        </a>
-                    ))}
-                </div>
+  useEffect(() => {
+    function handleOutside(e) {
+      if (
+        menuOpen &&
+        menuRef.current &&
+        !menuRef.current.contains(e.target) &&
+        btnRef.current &&
+        !btnRef.current.contains(e.target)
+      ) {
+        setMenuOpen(false);
+      }
+    }
+    function handleEsc(e) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
 
-                {/* Right: Sidebar toggle */}
-                <button
-                    onClick={() => setSidebarOpen(true)}
-                    className="p-2 rounded-md hover:bg-gray-800 transition-colors"
+    document.addEventListener("mousedown", handleOutside);
+    document.addEventListener("touchstart", handleOutside);
+    document.addEventListener("keydown", handleEsc);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("touchstart", handleOutside);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [menuOpen]);
+
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((s) => s[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : "";
+
+  return (
+    <nav className="w-full bg-white text-gray-800 shadow-lg sticky top-0 z-50 border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        {/* Left: User menu */}
+        <div className="flex items-center space-x-4">
+          {!isAuth ? (
+            <a
+              href="/login"
+              className="flex items-center space-x-2 hover:text-blue-600 transition-colors"
+            >
+              <UserIcon size={22} />
+              <span className="text-sm font-medium">Login / Register</span>
+            </a>
+          ) : (
+            <div className="relative">
+              <button
+                ref={btnRef}
+                onClick={() => setMenuOpen((s) => !s)}
+                aria-expanded={menuOpen}
+                aria-haspopup="true"
+                className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                title={user?.name || "Account"}
+              >
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar ? `storage/${user.avatar}` : '/images/placeholder.jpg'}
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full border border-gray-300 object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-xs font-medium text-white">
+                    {initials || <UserIcon size={16} />}
+                  </div>
+                )}
+                <span className="text-sm font-medium hidden sm:inline">{user?.name}</span>
+              </button>
+
+              {/* Dropdown */}
+              {menuOpen && (
+                <div
+                  ref={menuRef}
+                  role="menu"
+                  aria-orientation="vertical"
+                  className="absolute left-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-lg ring-1 ring-gray-200 z-50 focus:outline-none"
                 >
-                    <Menu size={24} />
-                </button>
-            </div>
-
-            {/* Sidebar */}
-            {sidebarOpen && (
-                <div className="fixed inset-0 z-50 flex">
-                    {/* Overlay */}
-                    <div
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-                        onClick={() => setSidebarOpen(false)}
-                    />
-                    {/* Sidebar Content */}
-                    <div className="relative w-72 bg-gray-900 h-full shadow-xl p-6 z-50">
-                        {/* Close button */}
-                        <button
-                            className="absolute top-4 right-4 p-2 rounded-md hover:bg-gray-800 transition-colors"
-                            onClick={() => setSidebarOpen(false)}
-                        >
-                            <X size={22} />
-                        </button>
-
-                        <h2 className="text-xl font-bold mb-6 text-cyan-400">Categories</h2>
-                        <nav className="flex flex-col space-y-4">
-                            {categories.map((cat) => (
-                                <a
-                                    key={cat.id}
-                                    href={`/categories/${cat.slug}`}
-                                    className="text-sm font-medium hover:text-cyan-400 transition-colors"
-                                >
-                                    {cat.name}
-                                </a>
-                            ))}
-                        </nav>
-                    </div>
+                  <a
+                    href="/dashboard"
+                    role="menuitem"
+                    className="block px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Dashboard
+                  </a>
+                  <a
+                    href="/orders"
+                    role="menuitem"
+                    className="block px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    My Orders
+                  </a>
+                  <button
+                    onClick={() => router.post("/logout")}
+                    className="w-full text-left block px-4 py-2 text-sm hover:bg-gray-100 text-red-600 transition-colors"
+                  >
+                    Logout
+                  </button>
                 </div>
-            )}
-        </nav>
-    );
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Center: Categories */}
+        <div className="hidden md:flex space-x-8">
+          {categories.slice(0, 5).map((cat) => (
+            <a
+              key={cat.id}
+              href={`/categories/${cat.slug}`}
+              className="text-sm font-medium hover:text-blue-600 transition-colors"
+            >
+              {cat.name}
+            </a>
+          ))}
+        </div>
+
+        {/* Right: Sidebar toggle */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 rounded-md hover:bg-gray-100 transition-colors text-gray-600"
+        >
+          <MenuIcon size={24} />
+        </button>
+      </div>
+
+      {/* Sidebar */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <div className="relative w-72 bg-white h-full shadow-xl p-6 z-50">
+            <button
+              className="absolute top-4 right-4 p-2 rounded-md hover:bg-gray-100 transition-colors text-gray-600"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X size={22} />
+            </button>
+
+            <h2 className="text-xl font-bold mb-6 text-blue-600">Categories</h2>
+            <nav className="flex flex-col space-y-4">
+              {categories.map((cat) => (
+                <a
+                  key={cat.id}
+                  href={`/categories/${cat.slug}`}
+                  className="text-sm font-medium hover:text-blue-600 transition-colors"
+                >
+                  {cat.name}
+                </a>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
+    </nav>
+  );
 }

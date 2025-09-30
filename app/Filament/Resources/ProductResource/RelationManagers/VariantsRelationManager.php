@@ -70,7 +70,7 @@ class VariantsRelationManager extends RelationManager
                         Forms\Components\Repeater::make('values')
                             ->relationship('values')
                             ->schema([
-                                Forms\Components\Select::make('attribute_value_id')
+                                Forms\Components\Select::make('attribute_id')
                                     ->label('Attribute Value')
                                     ->options(function ($get, $set, $livewire) {
                                         $product = $livewire->ownerRecord;
@@ -98,7 +98,7 @@ class VariantsRelationManager extends RelationManager
                             ->cloneable()
                             ->collapsible()
                             ->itemLabel(fn (array $state): ?string => 
-                                AttributeValue::find($state['attribute_value_id'])->value ?? null
+                                AttributeValue::find($state['attribute_id'])->value ?? null
                             )
                             ->helperText('Select attribute values that define this variant')
                             ->columnSpanFull(),

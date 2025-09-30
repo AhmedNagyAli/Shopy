@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('attribute_values', function (Blueprint $table) {
-            $table->string('color_code')->nullable();
-            $table->decimal('extra_price', 8, 2)->default(0);
-            $table->integer('sort_order')->default(0);
+            // $table->string('color_code')->nullable();
+            // $table->decimal('extra_price', 8, 2)->default(0);
+            // $table->integer('sort_order')->default(0);
 
         });
     }

@@ -49,7 +49,8 @@ class ProductVariantResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('product_id')
+                Tables\Columns\TextColumn::make('product.name')
+                 ->label('Product Name')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('sku')

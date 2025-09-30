@@ -22,6 +22,7 @@ class HomeController extends Controller
         }]);
     })
     ->get();
+    
 
         $categories = Category::with(['products' => function ($q) {
             $q->latest()->take(1); // only latest product
