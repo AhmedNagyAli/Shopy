@@ -22,42 +22,31 @@ class ProductVariant extends Model
     {
         return $this->morphMany(Discount::class, 'discountable');
     }
-    public function getFinalPriceAttribute()
+     public function getFinalPriceAttribute()
     {
-        $price = $this->price;
-
-        // Variant discount takes priority
-        $discount = $this->discounts()
-            ->where('active', true)
+        $activeDiscount = $this->discounts()
+            ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
             })
             ->where(function ($q) {
                 $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
             })
-            ->latest()->first();
+            ->latest()
+            ->first();
 
-        if (! $discount) {
-            // Fallback: product-level discount
-            $discount = $this->product->discounts()
-                ->where('active', true)
-                ->where(function ($q) {
-                    $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
-                })
-                ->where(function ($q) {
-                    $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
-                })
-                ->latest()->first();
+        if (! $activeDiscount) {
+            return $this->price;
         }
 
-        if ($discount) {
-            if ($discount->type === 'percentage') {
-                $price -= ($price * ($discount->value / 100));
-            } else {
-                $price -= $discount->value;
-            }
+        if ($activeDiscount->type === 'percentage') {
+            return round($this->price * (1 - $activeDiscount->value / 100), 2);
         }
 
-        return max(0, $price);
+        if ($activeDiscount->type === 'fixed') {
+            return max(0, $this->price - $activeDiscount->value);
+        }
+
+        return $this->price;
     }
 }

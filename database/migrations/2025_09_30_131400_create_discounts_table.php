@@ -11,15 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        
-Schema::create('discounts', function (Blueprint $table) {
+     
+        Schema::create('discounts', function (Blueprint $table) {
     $table->id();
-    $table->morphs('discountable'); // can apply to Product or ProductVariant
-    $table->enum('type', ['percentage', 'fixed']);
-    $table->decimal('value', 10, 2);
-    $table->dateTime('starts_at')->nullable();
-    $table->dateTime('ends_at')->nullable();
-    $table->boolean('active')->default(true);
+    $table->string('name');
+    $table->enum('type', ['percentage', 'fixed']); // % or fixed
+    $table->decimal('value', 10, 2);              // discount amount
+    $table->morphs('discountable');               // discountable_id + discountable_type
+    $table->timestamp('starts_at')->nullable();
+    $table->timestamp('ends_at')->nullable();
+    $table->boolean('is_active')->default(true);
     $table->timestamps();
 });
 

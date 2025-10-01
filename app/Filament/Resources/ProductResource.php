@@ -139,6 +139,50 @@ class ProductResource extends Resource
                             ->createOptionUsing(fn (array $data) => Category::create($data)->id),
                     ]),
 
+                    // ───── Discounts ─────
+                Forms\Components\Section::make('Product Discount')
+    ->description('Optional discount for the whole product (applies if no variant-specific discount is set)')
+    ->schema([
+        Forms\Components\Repeater::make('discounts')
+            ->relationship('discounts')
+            ->schema([
+                Forms\Components\TextInput::make('name')
+                    ->label('Discount Name')
+                    ->required(),
+
+                Forms\Components\Select::make('type')
+                    ->options([
+                        'percentage' => 'Percentage',
+                        'fixed' => 'Fixed Amount',
+                    ])
+                    ->required()
+                    ->default('percentage'),
+
+                Forms\Components\TextInput::make('value')
+                    ->numeric()
+                    ->required()
+                    ->suffix(fn ($get) => $get('type') === 'percentage' ? '%' : '$'),
+
+                Forms\Components\DateTimePicker::make('starts_at')
+                    ->label('Start Date'),
+
+                Forms\Components\DateTimePicker::make('ends_at')
+                    ->label('End Date'),
+
+                Forms\Components\Toggle::make('is_active')
+                    ->default(true)
+                    ->label('Active?'),
+            ])
+            ->columns(2)
+            ->minItems(0)
+            ->defaultItems(0)
+            ->collapsible()
+            ->cloneable()
+            ->createItemButtonLabel('Add Discount'),
+    ])
+    ->collapsed(),
+
+
                 // ───── Variants ─────
                 Forms\Components\Section::make('Product Variants')
                     ->description('Define product variations with attributes like Color: Red, Size: XL')
@@ -221,6 +265,43 @@ class ProductResource extends Resource
                                     ->createOptionUsing(function (array $data) {
                                         return AttributeValue::create($data)->id;
                                     }),
+                                    Forms\Components\Repeater::make('discounts')
+    ->relationship('discounts')
+    ->schema([
+        Forms\Components\TextInput::make('name')
+            ->label('Discount Name')
+            ->required(),
+
+        Forms\Components\Select::make('type')
+            ->options([
+                'percentage' => 'Percentage',
+                'fixed' => 'Fixed Amount',
+            ])
+            ->required()
+            ->default('percentage'),
+
+        Forms\Components\TextInput::make('value')
+            ->numeric()
+            ->required()
+            ->suffix(fn ($get) => $get('type') === 'percentage' ? '%' : '$'),
+
+        Forms\Components\DateTimePicker::make('starts_at')
+            ->label('Start Date'),
+
+        Forms\Components\DateTimePicker::make('ends_at')
+            ->label('End Date'),
+
+        Forms\Components\Toggle::make('is_active')
+            ->default(true)
+            ->label('Active?'),
+    ])
+    ->columns(2)
+    ->minItems(0)
+    ->defaultItems(0)
+    ->collapsible()
+    ->cloneable()
+    ->createItemButtonLabel('Add Discount'),
+
                             ])
                             ->columns(2)
                             ->columnSpanFull()

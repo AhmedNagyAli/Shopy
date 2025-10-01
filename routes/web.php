@@ -44,17 +44,31 @@ Route::get('/test-image', function () {
 });
 
 Route::get('/teee',function(){
-    // Get final price of a variant
+    // Get final price of a variant\
+    $product = Product::latest()->first();
+    $variant = $product->variants()->latest()->first();
+    dd($variant->price);
+    dd($product->variants()->latest()->price);
 $variant = ProductVariant::with('product')->find(7);
+// Example: 20% discount for this variant
+$var=$variant->discounts()->create([
+    'name'      => 'Autumn Sale',
+    'type'      => 'percentage',
+    'value'     => 20,
+    'starts_at' => now(),
+    'ends_at'   => now()->addDays(7),
+    'is_active' => true,
+]);
+dd($variant->price,$variant->final_price);
 $price = PriceHelper::calculateFinalPrice($variant);
 
 // Apply coupon to cart
-$coupon = Coupon::where('code', 'SUMMER20')->first();
-$cartTotal = 300;
+// $coupon = Coupon::where('code', 'SUMMER20')->first();
+// $cartTotal = 300;
 
-$discountedCartTotal = PriceHelper::applyCoupon($coupon, $cartTotal);
+// $discountedCartTotal = PriceHelper::applyCoupon($coupon, $cartTotal);
 
-dd($discountedCartTotal);
+//dd($discountedCartTotal);
 
 
 });

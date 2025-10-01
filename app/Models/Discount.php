@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
     class Discount extends Model
 {
-    protected $fillable = ['type', 'value', 'starts_at', 'ends_at', 'active'];
+    protected $fillable = ['name','type', 'value',
+    'discountable_id',
+    'discountable_type',
+     'starts_at', 'ends_at',
+      'is_active'];
 
     public function discountable()
     {
