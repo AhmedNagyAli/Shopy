@@ -1,11 +1,14 @@
 <?php
 
+use App\Helpers\PriceHelper;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ProductController;
+use App\Models\Coupon;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -38,4 +41,20 @@ Route::get('/test-image', function () {
     return Inertia::render('TestImage', [
         'product' => $product,
     ]);
+});
+
+Route::get('/teee',function(){
+    // Get final price of a variant
+$variant = ProductVariant::with('product')->find(7);
+$price = PriceHelper::calculateFinalPrice($variant);
+
+// Apply coupon to cart
+$coupon = Coupon::where('code', 'SUMMER20')->first();
+$cartTotal = 300;
+
+$discountedCartTotal = PriceHelper::applyCoupon($coupon, $cartTotal);
+
+dd($discountedCartTotal);
+
+
 });

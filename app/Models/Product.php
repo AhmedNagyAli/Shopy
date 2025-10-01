@@ -30,6 +30,11 @@ class Product extends Model
     {
         return $this->hasMany(ProductImage::class);
     }
+    public function discounts()
+    {
+        return $this->morphMany(Discount::class, 'discountable');
+    }
+    
     public function wishlistedBy()
 {
     return $this->belongsToMany(User::class, 'wishlists')

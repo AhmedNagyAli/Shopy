@@ -2,8 +2,8 @@ import MainLayout from '../../Layouts/MainLayout';
 import ProductCard from '../../Components/ProductCard';
 
 export default function Home({ products, categories }) {
-    console.log( products);
-    console.log(categories);
+    //console.log( products);
+    //console.log(categories);
     return (
         <MainLayout categories={categories}>
             <div className="max-w-7xl mx-auto px-6 py-10 space-y-16">
