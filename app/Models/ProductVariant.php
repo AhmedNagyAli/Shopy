@@ -9,6 +9,8 @@ class ProductVariant extends Model
     protected $fillable = ['product_id', 'sku', 'price', 'stock', 'image', 'is_active','is_default'];
 
     protected $appends = ['final_price']; 
+    protected $with = ['discounts'];
+
 
     
     public function product()
