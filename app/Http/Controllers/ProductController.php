@@ -13,6 +13,7 @@ class ProductController extends Controller
     
     $product = Product::with([
         'variants.values',
+        'variants.values.attribute', 
         'images',
         'categories',
     ])->where('slug', $slug)->firstOrFail();
@@ -22,7 +23,8 @@ class ProductController extends Controller
         })
         ->where('id', '!=', $product->id)
         ->with('categories')
-        ->take(4)
+         ->with('variants')
+        ->take(8)
         ->get();
 
     return Inertia::render('Products/Show', [

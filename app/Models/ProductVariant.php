@@ -6,7 +6,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductVariant extends Model
 {
+    
+    
     protected $fillable = ['product_id', 'sku', 'price', 'stock', 'image', 'is_active','is_default'];
+
+
+    protected static function booted()
+    {
+        static::creating(function ($variant) {
+            // Only generate if SKU is empty
+            if (empty($variant->sku)) {
+                // Get latest variant ID
+                $latest = ProductVariant::latest('id')->first();
+                $nextId = $latest ? $latest->id + 1 : 1;
+                $variant->sku = 'SKU-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+            }
+        });
+    }
+
+
 
     protected $appends = ['final_price']; 
     protected $with = ['discounts'];
@@ -21,7 +39,8 @@ class ProductVariant extends Model
 
     public function values()
     {
-        return $this->belongsToMany(AttributeValue::class, 'product_variant_values');
+        return $this->belongsToMany(AttributeValue::class, 'product_variant_values')
+         ->with('attribute'); 
     }
     public function discounts()
     {

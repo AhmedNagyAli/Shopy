@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('product_variant_values', function (Blueprint $table) {
             $table->foreignIdFor(ProductVariant::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(AttributeValue::class)->constrained()->cascadeOnDelete();
+            $table->unique(['product_variant_id', 'attribute_value_id']);
             $table->timestamps();
         });
     }

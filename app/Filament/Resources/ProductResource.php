@@ -138,6 +138,39 @@ class ProductResource extends Resource
                             ])
                             ->createOptionUsing(fn (array $data) => Category::create($data)->id),
                     ]),
+                    // ───── Product Attributes ─────
+Forms\Components\Section::make('Product Attributes')
+    ->description('Select attributes that apply to this product (e.g., Material, Brand, etc.)')
+    ->schema([
+        Forms\Components\Select::make('attributes')
+            ->relationship('attributes', 'name')
+            ->multiple()
+            ->preload()
+            ->searchable()
+            ->helperText('These attributes will be stored in the attribute_product table')
+            ->createOptionForm([
+                Forms\Components\TextInput::make('name')
+                    ->required()
+                    ->maxLength(255)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function ($set, $state) {
+                        $set('slug', Str::slug($state));
+                    }),
+                Forms\Components\TextInput::make('slug')
+                    ->required()
+                    ->maxLength(255)
+                    ->unique('attributes', 'slug'),
+                Forms\Components\Textarea::make('description')
+                    ->maxLength(65535),
+                Forms\Components\Toggle::make('is_filterable')
+                    ->helperText('Whether this attribute can be used for filtering products')
+                    ->default(true),
+            ])
+            ->createOptionUsing(function (array $data) {
+                return \App\Models\Attribute::create($data)->id;
+            }),
+    ])
+    ->collapsed(),
 
                     // ───── Discounts ─────
                 Forms\Components\Section::make('Product Discount')
@@ -208,17 +241,19 @@ class ProductResource extends Resource
                                     ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                     ->columnSpanFull(),
 
-                                // Variant Details
                                 Forms\Components\TextInput::make('sku')
-                                    ->label('SKU')
-                                    ->required()
-                                    ->maxLength(50)
-                                    ->unique(
-                                        table: 'product_variants',
-                                        column: 'sku',
-                                        ignoreRecord: true
-                                    )
-                                    ->helperText('Unique stock keeping unit'),
+    ->label('SKU')
+    ->disabled() // prevent editing manually
+    ->default(fn () => 'SKU-' . strtoupper(Str::random(8))) // auto-generate
+    ->required()
+    ->maxLength(50)
+    ->unique(
+        table: 'product_variants',
+        column: 'sku',
+        ignoreRecord: true
+    )
+    ->helperText('Auto-generated unique stock keeping unit'),
+
 
                                 Forms\Components\TextInput::make('price')
                                     ->label('Variant Price')
@@ -388,6 +423,14 @@ class ProductResource extends Resource
                     ->sortable()
                     ->alignCenter()
                     ->color(fn ($state) => $state > 0 ? 'success' : 'gray'),
+                    // Add to your table() method in the columns array
+Tables\Columns\TextColumn::make('attributes.name')
+    ->label('Product Attributes')
+    ->badge()
+    ->separator(',')
+    ->color('gray')
+    ->limitList(2)
+    ->expandableLimitedList(),
 
                 Tables\Columns\TextColumn::make('variants_with_images_count')
                     ->label('Variants with Images')

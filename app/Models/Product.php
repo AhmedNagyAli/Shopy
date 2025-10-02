@@ -17,13 +17,13 @@ class Product extends Model
 
     public function attributes()
     {
-        return $this->belongsToMany(Attribute::class);
+        return $this->belongsToMany(Attribute::class,'attribute_product');
     }
     
 
     public function variants()
     {
-        return $this->hasMany(ProductVariant::class);
+        return $this->hasMany(ProductVariant::class)->with('values.attribute');
     }
 
     public function images()
@@ -40,5 +40,7 @@ class Product extends Model
     return $this->belongsToMany(User::class, 'wishlists')
                 ->withTimestamps();
 }
+
+
 
 }
