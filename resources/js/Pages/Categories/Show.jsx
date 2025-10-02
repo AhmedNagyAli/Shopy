@@ -1,10 +1,10 @@
 import MainLayout from '../../Layouts/MainLayout';
 import ProductCard from '../../Components/ProductCard';
 
-export default function Show({ category }) {
+export default function Show({ category,categories }) {
     console.log(category);
     return (
-        <MainLayout >
+        <MainLayout categories={categories}>
             <div className="max-w-7xl mx-auto px-6 py-10">
                 <h1 className="text-3xl font-bold mb-6">{category.name}</h1>
 

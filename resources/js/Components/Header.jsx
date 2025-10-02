@@ -48,12 +48,12 @@ export default function Header({ settings }) {
                 {/* Right: Contact + Socials */}
                 <div className="flex items-center space-x-6">
                     {/* Contact Phone */}
-                    {settings?.contact_phone && (
+                    {/* {settings?.contact_phone && (
                         <a href={`tel:${settings.contact_phone}`} 
                            className="text-sm text-gray-600 hover:text-blue-600">
                             {settings.contact_phone}
                         </a>
-                    )}
+                    )} */}
 
                     {/* Social Links */}
                     {settings?.social_links && (

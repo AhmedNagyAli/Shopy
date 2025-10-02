@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -32,5 +34,31 @@ class ProductController extends Controller
         'relatedProducts' => $relatedProducts,
     ]);
 }
+    public function search(Request $request)
+{
+    //dd($request->all());
+    $q = $request->input('q');
+
+    $products = Product::
+    with([
+        'variants.values',
+        'variants.values.attribute', 
+        'images',
+        'categories',
+    ])->
+    where('name', 'like', "%{$q}%")
+    ->orWhere('description', 'like', "%{$q}%")
+    ->get();
+    $categories = Category::all();
+    $settings = Setting::first();
+
+    return inertia('Search/Results', [
+        'query' => $q,
+        'products' => $products,
+        'categories' => $categories,
+        'settings' => $settings,
+    ]);
+}
+
 
 }
