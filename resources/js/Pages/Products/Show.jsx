@@ -31,8 +31,6 @@ export default function Show({ product, relatedProducts }) {
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
 
-
-
   // Check if current variant is in user's wishlist
   useEffect(() => {
     const checkWishlist = async () => {
@@ -50,6 +48,7 @@ export default function Show({ product, relatedProducts }) {
 
     checkWishlist();
   }, [selectedVariant]);
+
   // Organize attributes into color + size
   const { colorAttributes, sizeAttributes } = useMemo(() => {
     const colors = new Map();
@@ -82,16 +81,16 @@ export default function Show({ product, relatedProducts }) {
 
   //add the product variant to the user cart
   const handleAddToCart = async () => {
-  if (!selectedVariant) return;
+    if (!selectedVariant) return;
 
-  try {
-    await axios.post("/cart", {
-      product_id: product.id,
-      product_variant_id: selectedVariant.id,
-      quantity: 1,
-    });
+    try {
+      await axios.post("/cart", {
+        product_id: product.id,
+        product_variant_id: selectedVariant.id,
+        quantity: 1,
+      });
 
-    Swal.fire({
+      Swal.fire({
         toast: true,
         position: "top-end",
         icon: "success",
@@ -100,9 +99,9 @@ export default function Show({ product, relatedProducts }) {
         timer: 3000,
         timerProgressBar: true,
       });
-  } catch (err) {
-    console.error(err.response || err);
-    Swal.fire({
+    } catch (err) {
+      console.error(err.response || err);
+      Swal.fire({
         toast: true,
         position: "top-end",
         icon: "error",
@@ -110,11 +109,10 @@ export default function Show({ product, relatedProducts }) {
         showConfirmButton: false,
         timer: 3000,
       });
-    
-  }
-};
+    }
+  };
 
-const handleToggleWishlist = async () => {
+  const handleToggleWishlist = async () => {
     if (!selectedVariant || wishlistLoading) return;
     setWishlistLoading(true);
 
@@ -225,7 +223,9 @@ const handleToggleWishlist = async () => {
     }
   }, [product.variants, selectedVariant]);
 
-  const currentPrice = selectedVariant?.final_price ?? selectedVariant?.price ?? product.price;
+  // ✅ Prices - Updated to match your requested format
+  const variantPrice = selectedVariant?.price ?? product.price;
+  const finalPrice = selectedVariant?.final_price ?? variantPrice;
   const isOutOfStock = selectedVariant ? selectedVariant.stock === 0 : product.stock === 0;
 
   return (
@@ -275,9 +275,19 @@ const handleToggleWishlist = async () => {
         {/* Right: Info */}
         <div className="space-y-6">
           <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
-          <div className="flex items-center gap-3">
-            <span className="text-2xl font-bold">${currentPrice}</span>
+          
+          {/* ✅ Price Display - Updated to match your requested format */}
+          <div className="flex items-baseline gap-2 mt-2">
+            <span className="text-2xl font-bold text-gray-900">
+              LE:{finalPrice}
+            </span>
+            {finalPrice < variantPrice && (
+              <span className="text-sm text-gray-600 line-through">
+                LE:{variantPrice}
+              </span>
+            )}
           </div>
+
           <div className="prose prose-gray max-w-none">
             <div dangerouslySetInnerHTML={{ __html: product.description }} />
           </div>
@@ -351,35 +361,34 @@ const handleToggleWishlist = async () => {
           {/* Actions */}
           <div className="flex gap-4">
             <button
-  disabled={!selectedVariant || isOutOfStock}
-  onClick={handleAddToCart}
-  className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl font-medium shadow-lg disabled:bg-gray-400"
->
-  <ShoppingCart className="w-5 h-5" />
-  {isOutOfStock ? "Out of Stock" : !selectedVariant ? "Select Options" : "Add to Cart"}
-</button>
+              disabled={!selectedVariant || isOutOfStock}
+              onClick={handleAddToCart}
+              className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl font-medium shadow-lg disabled:bg-gray-400"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              {isOutOfStock ? "Out of Stock" : !selectedVariant ? "Select Options" : "Add to Cart"}
+            </button>
 
-          <button
-      disabled={!selectedVariant || wishlistLoading}
-      onClick={handleToggleWishlist}
-      className={`flex items-center gap-2 border px-6 py-3 rounded-xl disabled:opacity-50 transition ${
-        isInWishlist
-          ? "bg-red-100 border-red-400 text-red-600"
-          : "border-gray-300 text-gray-700"
-      }`}
-    >
-      <Heart
-        className={`w-5 h-5 ${
-          isInWishlist ? "fill-red-500 text-red-500" : ""
-        }`}
-      />
-      {!selectedVariant
-        ? "Select Options"
-        : isInWishlist
-        ? "In Wishlist"
-        : ""}
-    </button>
-
+            <button
+              disabled={!selectedVariant || wishlistLoading}
+              onClick={handleToggleWishlist}
+              className={`flex items-center gap-2 border px-6 py-3 rounded-xl disabled:opacity-50 transition ${
+                isInWishlist
+                  ? "bg-red-100 border-red-400 text-red-600"
+                  : "border-gray-300 text-gray-700"
+              }`}
+            >
+              <Heart
+                className={`w-5 h-5 ${
+                  isInWishlist ? "fill-red-500 text-red-500" : ""
+                }`}
+              />
+              {!selectedVariant
+                ? "Select Options"
+                : isInWishlist
+                ? "In Wishlist"
+                : ""}
+            </button>
           </div>
         </div>
       </div>
