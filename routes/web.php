@@ -10,6 +10,7 @@ use App\Http\Controllers\ProductController;
 use App\Models\Coupon;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -20,8 +21,14 @@ Route::get('/search', [ProductController::class, 'search'])->name('search');
 
 
 Route::get('/categories/{slug}', [CategoryController::class, 'show'])->name('categories.show');
-Route::post('/wishlist/{product}', [WishlistController::class, 'toggle'])
-    ->name('wishlist.add');
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/wishlist', [WishlistController::class, 'store'])->name('wishlist.store');
+    Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+});
+// Route::post('/wishlist/{product}', [WishlistController::class, 'toggle'])
+//     ->name('wishlist.add');
 
 Route::middleware('auth')->group(function () {
     Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
@@ -38,3 +45,10 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
+
+Route::get('test',function(){
+    $user = Auth::user();
+$wishlist = $user->wishlist()->with(['product', 'variant'])->get();
+dd($wishlist);
+
+});

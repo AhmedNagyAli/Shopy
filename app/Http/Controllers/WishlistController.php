@@ -11,49 +11,42 @@ use Illuminate\Support\Facades\Auth;
 class WishlistController extends Controller
 {
     public function store(Request $request)
-    {
-        
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'product_variant_id' => 'nullable|exists:product_variants,id',
-        ]);
+{
+    $request->validate([
+        'product_id' => 'required|exists:products,id',
+        'product_variant_id' => 'nullable|exists:product_variants,id',
+    ]);
 
-        // Check if already in wishlist
-        $existing = Wishlist::where('user_id', Auth::id())
-            ->where('product_id', $request->product_id)
-            ->where('product_variant_id', $request->product_variant_id)
-            ->first();
+    // Check if this product/variant is already in wishlist
+    $exists = Wishlist::where('user_id', Auth::id())
+        ->where('product_id', $request->product_id)
+        ->when($request->product_variant_id, function ($q) use ($request) {
+            $q->where('product_variant_id', $request->product_variant_id);
+        })
+        ->exists();
 
-        if ($existing) {
-            return response()->json(['message' => 'Item already in wishlist'], 409);
-        }
-
-        // Get selected attributes if variant is selected
-        $attributes = [];
-        if ($request->product_variant_id) {
-            $variant = ProductVariant::with([
-                'values',
-                'values.attribute'
-            ])->find($request->product_variant_id);
-            if ($variant) {
-                foreach ($variant->values as $value) {
-                    $attributes[$value->attribute->name] = $value->value;
-                }
-            }
-        }
-
-        $wishlist = Wishlist::create([
-            'user_id' => Auth::id(),
-            'product_id' => $request->product_id,
-            'product_variant_id' => $request->product_variant_id,
-            'attributes' => $attributes,
-        ]);
-
+    if ($exists) {
         return response()->json([
-            'message' => 'Added to wishlist',
-            'wishlist' => $wishlist->load('product', 'variant')
-        ]);
+            'success' => false,
+            'message' => 'This item is already in your wishlist.',
+        ], 200);
     }
+
+    // Otherwise create new wishlist entry
+    $wishlistItem = Wishlist::create([
+        'user_id' => Auth::id(),
+        'product_id' => $request->product_id,
+        'product_variant_id' => $request->product_variant_id,
+        'attributes' => $request->attributes ?? [],
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Added to wishlist',
+        'wishlistItem' => $wishlistItem,
+    ]);
+}
+
 
     public function destroy($id)
     {

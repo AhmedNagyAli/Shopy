@@ -69,6 +69,21 @@ class ProductVariant extends Model
     {
         return $this->morphMany(Discount::class, 'discountable');
     }
+    public function cartItems()
+{
+    return $this->hasMany(Cart::class);
+}
+
+public function wishlistItems()
+{
+    return $this->hasMany(Wishlist::class);
+}
+
+
+
+
+
+
 public function getFinalPriceAttribute()
 {
     // 1️⃣ Check variant-level discount

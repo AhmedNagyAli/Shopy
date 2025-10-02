@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { ShoppingCart, Heart, Check } from "lucide-react";
 import ProductCard from "@/Components/ProductCard";
 import axios from "axios";
+import Swal from 'sweetalert2'
 
 export default function Show({ product, relatedProducts }) {
   // Collect unique images from variants
@@ -69,12 +70,61 @@ export default function Show({ product, relatedProducts }) {
       quantity: 1,
     });
 
-    alert("Added to cart!");
+    Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Added to Cart!",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
   } catch (err) {
     console.error(err.response || err);
-    alert("Failed to add to cart");
+    Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: "Something went wrong!",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    
   }
 };
+//add the product to the wish list
+  const handleAddToWishlist = async () => {
+    if (!selectedVariant) return;
+
+    try {
+      await axios.post("/wishlist", {
+        product_id: product.id,
+        product_variant_id: selectedVariant.id,
+        attributes: selectedAttributes, // optional, if you want to store selected color/size
+      });
+
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Added to Wishlist!",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+    } catch (err) {
+      console.error(err.response || err);
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: "Something went wrong!",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    }
+  };
+
 
 
   // Available sizes for a given color
@@ -284,9 +334,15 @@ export default function Show({ product, relatedProducts }) {
   {isOutOfStock ? "Out of Stock" : !selectedVariant ? "Select Options" : "Add to Cart"}
 </button>
 
-            <button className="flex items-center gap-2 border border-gray-300 px-6 py-3 rounded-xl">
-              <Heart className="w-5 h-5" /> Wishlist
-            </button>
+            <button
+  disabled={!selectedVariant}
+  onClick={handleAddToWishlist}
+  className="flex items-center gap-2 border border-gray-300 px-6 py-3 rounded-xl disabled:opacity-50"
+>
+  <Heart className="w-5 h-5" /> 
+  {!selectedVariant ? "Select Options" : "Wishlist"}
+</button>
+
           </div>
         </div>
       </div>

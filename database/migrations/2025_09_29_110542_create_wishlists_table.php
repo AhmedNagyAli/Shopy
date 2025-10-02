@@ -22,6 +22,7 @@ return new class extends Migration
             $table->foreignIdFor(ProductVariant::class)->nullable()->constrained('product_variants')->cascadeOnDelete();
             $table->json('attributes')->nullable();
             $table->unique(['user_id', 'product_id', 'product_variant_id']);  // prevent duplicates
+            $table->timestamps();
         });
     }
 

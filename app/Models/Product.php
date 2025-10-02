@@ -26,6 +26,12 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class)->with('values.attribute');
     }
 
+    public function cartItems()
+    {
+        return $this->hasMany(Cart::class);
+    }
+
+
     public function images()
     {
         return $this->hasMany(ProductImage::class);
@@ -35,10 +41,9 @@ class Product extends Model
         return $this->morphMany(Discount::class, 'discountable');
     }
     
-    public function wishlistedBy()
+    public function wishlistItems()
 {
-    return $this->belongsToMany(User::class, 'wishlists')
-                ->withTimestamps();
+    return $this->hasMany(Wishlist::class);
 }
 
 
