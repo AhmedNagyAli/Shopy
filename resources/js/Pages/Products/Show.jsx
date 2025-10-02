@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { ShoppingCart, Heart, Check } from "lucide-react";
 import ProductCard from "@/Components/ProductCard";
+import axios from "axios";
 
 export default function Show({ product, relatedProducts }) {
   // Collect unique images from variants
@@ -56,6 +57,25 @@ export default function Show({ product, relatedProducts }) {
       sizeAttributes: Array.from(sizes.values()),
     };
   }, [product.variants]);
+
+  //add the product variant to the user cart
+  const handleAddToCart = async () => {
+  if (!selectedVariant) return;
+
+  try {
+    await axios.post("/cart", {
+      product_id: product.id,
+      product_variant_id: selectedVariant.id,
+      quantity: 1,
+    });
+
+    alert("Added to cart!");
+  } catch (err) {
+    console.error(err.response || err);
+    alert("Failed to add to cart");
+  }
+};
+
 
   // Available sizes for a given color
   const availableSizes = useMemo(() => {
@@ -256,12 +276,14 @@ export default function Show({ product, relatedProducts }) {
           {/* Actions */}
           <div className="flex gap-4">
             <button
-              disabled={!selectedVariant || isOutOfStock}
-              className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl font-medium shadow-lg disabled:bg-gray-400"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              {isOutOfStock ? "Out of Stock" : !selectedVariant ? "Select Options" : "Add to Cart"}
-            </button>
+  disabled={!selectedVariant || isOutOfStock}
+  onClick={handleAddToCart}
+  className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl font-medium shadow-lg disabled:bg-gray-400"
+>
+  <ShoppingCart className="w-5 h-5" />
+  {isOutOfStock ? "Out of Stock" : !selectedVariant ? "Select Options" : "Add to Cart"}
+</button>
+
             <button className="flex items-center gap-2 border border-gray-300 px-6 py-3 rounded-xl">
               <Heart className="w-5 h-5" /> Wishlist
             </button>

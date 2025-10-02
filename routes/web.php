@@ -5,6 +5,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
 use App\Models\Coupon;
 use App\Models\Product;
@@ -22,9 +23,12 @@ Route::get('/categories/{slug}', [CategoryController::class, 'show'])->name('cat
 Route::post('/wishlist/{product}', [WishlistController::class, 'toggle'])
     ->name('wishlist.add');
 
-
+Route::middleware('auth')->group(function () {
+    Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+});
     
-    Route::middleware('guest')->group(function () {
+Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
 
