@@ -139,7 +139,7 @@ export default function Show({ product, relatedProducts }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Left: Images */}
         <div>
-          <div className="aspect-square rounded-xl overflow-hidden shadow-md border bg-gray-50">
+          <div className="aspect-square rounded-xl overflow-hidden shadow-md bg-gray-50">
             <img
               src={selectedImage}
               alt={product.name}

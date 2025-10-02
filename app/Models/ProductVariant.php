@@ -46,31 +46,56 @@ class ProductVariant extends Model
     {
         return $this->morphMany(Discount::class, 'discountable');
     }
-     public function getFinalPriceAttribute()
-    {
-        $activeDiscount = $this->discounts()
-            ->where('is_active', true)
-            ->where(function ($q) {
-                $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
-            })
-            ->where(function ($q) {
-                $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
-            })
-            ->latest()
-            ->first();
+public function getFinalPriceAttribute()
+{
+    // 1️⃣ Check variant-level discount
+    $variantDiscount = $this->discounts()
+        ->where('is_active', true)
+        ->where(function ($q) {
+            $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+        })
+        ->where(function ($q) {
+            $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+        })
+        ->latest()
+        ->first();
 
-        if (! $activeDiscount) {
-            return $this->price;
-        }
-
-        if ($activeDiscount->type === 'percentage') {
-            return round($this->price * (1 - $activeDiscount->value / 100), 2);
-        }
-
-        if ($activeDiscount->type === 'fixed') {
-            return max(0, $this->price - $activeDiscount->value);
-        }
-
-        return $this->price;
+    if ($variantDiscount) {
+        return $this->applyDiscount($this->price, $variantDiscount);
     }
+
+    // 2️⃣ If no variant discount, check product-level discount
+    $productDiscount = $this->product->discounts()
+        ->where('is_active', true)
+        ->where(function ($q) {
+            $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+        })
+        ->where(function ($q) {
+            $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+        })
+        ->latest()
+        ->first();
+
+    if ($productDiscount) {
+        return $this->applyDiscount($this->price, $productDiscount);
+    }
+
+    // 3️⃣ No discount, return base price
+    return $this->price;
+}
+
+// Helper method to apply a discount to a price
+protected function applyDiscount(float $price, $discount): float
+{
+    if ($discount->type === 'percentage') {
+        return round($price * (1 - $discount->value / 100), 2);
+    }
+
+    if ($discount->type === 'fixed') {
+        return max(0, $price - $discount->value);
+    }
+
+    return $price;
+}
+
 }
