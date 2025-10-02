@@ -13,7 +13,12 @@ class HomeController extends Controller
     {
         $userId = auth()->id();
 
-        $products = Product::with('categories')
+        $products = Product::with([
+        'variants.values',
+        'variants.values.attribute', 
+        'images',
+        'categories',
+    ])
     ->latest()
     ->take(10)
     ->when(auth()->check(), function ($query) {

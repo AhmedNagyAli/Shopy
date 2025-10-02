@@ -13,13 +13,36 @@ class ProductVariant extends Model
 
     protected static function booted()
     {
+        // Auto-generate SKU
         static::creating(function ($variant) {
-            // Only generate if SKU is empty
             if (empty($variant->sku)) {
-                // Get latest variant ID
                 $latest = ProductVariant::latest('id')->first();
                 $nextId = $latest ? $latest->id + 1 : 1;
                 $variant->sku = 'SKU-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+            }
+
+            // If it's the first variant for this product → make it default
+            if (!self::where('product_id', $variant->product_id)->exists()) {
+                $variant->is_default = true;
+            }
+        });
+
+        // Ensure only one default per product
+        static::saved(function ($variant) {
+            if ($variant->is_default) {
+                self::where('product_id', $variant->product_id)
+                    ->where('id', '!=', $variant->id)
+                    ->update(['is_default' => false]);
+            }
+        });
+
+        // When deleting a variant → ensure another one becomes default
+        static::deleted(function ($variant) {
+            if ($variant->is_default) {
+                $another = self::where('product_id', $variant->product_id)->first();
+                if ($another) {
+                    $another->update(['is_default' => true]);
+                }
             }
         });
     }

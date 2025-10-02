@@ -1,40 +1,78 @@
-// resources/js/Components/ProductCard.jsx
 import { Link } from '@inertiajs/react';
+import { ShoppingCart, Heart } from 'lucide-react';
 
 export default function ProductCard({ product }) {
+    // ✅ Default variant
+    const defaultVariant =
+        product.variants?.find(v => Number(v.is_default) === 1) ||
+        product.variants?.[0] ||
+        null;
+
+    // ✅ Prices
+    const variantPrice = defaultVariant?.price ?? product.price;
+    const finalPrice = defaultVariant?.final_price ?? variantPrice;
+
+    // ✅ Image
+    const imageUrl =
+        defaultVariant?.image
+            ? `/storage/${defaultVariant.image}`
+            : product.main_image
+                ? `/storage/${product.main_image}`
+                : '/images/placeholder.jpg';
+
+    // ✅ Unique variants by color (deduplicated)
+    const colorVariants = [
+        ...new Map(
+            product.variants
+                ?.map(v => {
+                    const color = v.values?.find(val => val.attribute?.slug === 'color');
+                    return color ? [color.value, v] : null;
+                })
+                .filter(Boolean)
+        ).values(),
+    ];
+
+    // ✅ Unique sizes
+    const sizes = [
+        ...new Map(
+            product.variants
+                ?.flatMap(v =>
+                    v.values?.filter(val => val.attribute?.slug === 'size')
+                )
+                .map(val => [val.id, val])
+        ).values(),
+    ];
+
     return (
         <Link
-            href={route('products.show', product.slug)} // ✅ sends to product show route
-            className="block bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 overflow-hidden group hover:border-gray-200"
+            href={route('products.show', product.slug)}
+            className="block bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 overflow-hidden group hover:border-gray-200"
         >
-            {/* Image Container */}
+            {/* Main Image */}
             <div className="relative aspect-square overflow-hidden bg-gray-50">
                 <img
-                    src={product.main_image ? `/storage/${product.main_image}` : '/images/placeholder.jpg'}
+                    src={imageUrl}
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
                 />
 
-                {/* Quick Actions Overlay */}
+                {/* Quick Actions */}
                 <div
-                    onClick={(e) => e.preventDefault()} // prevents link navigation when clicking heart
+                    onClick={e => e.preventDefault()}
                     className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col gap-2"
                 >
                     <button className="bg-white/90 hover:bg-white rounded-full p-2 shadow-sm transition-colors">
-                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
+                        <Heart className="w-4 h-4 text-gray-600" />
                     </button>
                 </div>
 
-                {/* Add to Cart Button */}
+                {/* Add to Cart */}
                 <button
-                    onClick={(e) => e.preventDefault()} // ✅ prevent navigation
+                    onClick={e => e.preventDefault()}
                     className="absolute bottom-3 right-3 bg-gray-900 hover:bg-gray-800 text-white rounded-full p-3 shadow-lg transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 active:scale-95"
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
+                    <ShoppingCart className="w-5 h-5" />
                 </button>
             </div>
 
@@ -47,50 +85,80 @@ export default function ProductCard({ product }) {
                     </p>
                 )}
 
-                {/* Product Name */}
+                {/* Name */}
                 <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 leading-tight">
                     {product.name}
                 </h3>
 
-                {/* Rating */}
-                {product.rating && (
-                    <div className="flex items-center gap-1 mb-3">
-                        <div className="flex">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <svg
-                                    key={star}
-                                    className={`w-3 h-3 ${star <= Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                                    viewBox="0 0 20 20"
-                                >
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
+                {/* Price */}
+                <div className="flex items-baseline gap-2 mt-2">
+                    <span className="text-lg font-bold text-gray-900">
+                        ${finalPrice}
+                    </span>
+                    {finalPrice < variantPrice && (
+                        <span className="text-sm text-gray-500 line-through">
+                            ${variantPrice}
+                        </span>
+                    )}
+                </div>
+
+                {/* Variant thumbnails & Sizes */}
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                    {/* Color Variants as Circles */}
+                    {colorVariants.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            {colorVariants.map(variant => (
+                                <img
+                                    key={variant.id}
+                                    src={
+                                        variant.image
+                                            ? `/storage/${variant.image}`
+                                            : '/images/placeholder.jpg'
+                                    }
+                                    alt={variant.values?.find(v => v.attribute?.slug === 'color')?.value}
+                                    className="w-9 h-9 rounded-full border border-gray-200 object-cover shadow-sm cursor-pointer hover:scale-110 transition-transform"
+                                    loading="lazy"
+                                />
                             ))}
                         </div>
-                        <span className="text-xs text-gray-600">{product.rating}</span>
-                        {product.review_count && (
-                            <span className="text-xs text-gray-500">({product.review_count})</span>
-                        )}
-                    </div>
-                )}
+                    )}
 
-                {/* Price */}
-                <div className="flex items-baseline gap-2 mt-4">
-                    <span className="text-lg font-bold text-gray-900">${product.price}</span>
-                    {product.original_price && product.original_price > product.price && (
-                        <span className="text-sm text-gray-500 line-through">${product.original_price}</span>
+                    {/* Sizes */}
+                    {sizes.length > 0 && (
+                        <div className="flex items-center gap-1">
+                            {sizes.map(size => (
+                                <span
+                                    key={size.id}
+                                    className="px-2 py-0.5 text-xs rounded border border-gray-300 bg-gray-50 text-gray-700"
+                                >
+                                    {size.value}
+                                </span>
+                            ))}
+                        </div>
                     )}
                 </div>
 
                 {/* Badges */}
                 <div className="flex flex-wrap gap-1 mt-3">
+                    {defaultVariant?.stock === 0 && (
+                        <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
+                            Out of Stock
+                        </span>
+                    )}
+                    {defaultVariant?.stock > 0 && defaultVariant?.stock <= 10 && (
+                        <span className="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded">
+                            Low Stock
+                        </span>
+                    )}
                     {product.is_new && (
-                        <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">New</span>
+                        <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                            New
+                        </span>
                     )}
                     {product.is_best_seller && (
-                        <span className="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">Best Seller</span>
-                    )}
-                    {product.stock_quantity <= 10 && product.stock_quantity > 0 && (
-                        <span className="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Low Stock</span>
+                        <span className="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">
+                            Best Seller
+                        </span>
                     )}
                 </div>
             </div>
