@@ -8,7 +8,6 @@ export default function MainLayout({ children,categories,settings }) {
     return (
         <div className="min-h-screen flex flex-col">
             <Navbar categories={categories}/>
-            <Header settings={settings} />
             <main className="flex-grow">{children}</main>
             <Footer />
         </div>

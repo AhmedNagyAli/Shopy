@@ -1,13 +1,28 @@
 import { Link } from "@inertiajs/react";
 import { Facebook, Twitter, Instagram } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function Header({ settings }) {
-    console.log(settings);
+    const [current, setCurrent] = useState(0);
+
+    const images = settings?.header_section_images || [];
+
+    // Auto-slide every 5s
+    useEffect(() => {
+        if (images.length > 1) {
+            const interval = setInterval(() => {
+                setCurrent((prev) => (prev + 1) % images.length);
+            }, 5000);
+            return () => clearInterval(interval);
+        }
+    }, [images.length]);
+
     return (
-        <header className="bg-white border-b shadow-sm">
-            <div className="max-w-7xl mx-auto px-6 flex items-center justify-between py-4">
+        <header className="bg-white shadow-sm relative">
+            {/* ✅ Header Top Section */}
+            <div className="max-w-7xl mx-auto px-6 flex items-center justify-between py-0">
                 
-                {/* Left: Logo / Site Name */}
+                {/* Left: Logo / Site Name
                 <Link href="/" className="flex items-center space-x-3">
                     {settings?.logo ? (
                         <img 
@@ -21,7 +36,7 @@ export default function Header({ settings }) {
                             {settings?.site_name || 'Shopy'}
                         </span>
                     )}
-                </Link>
+                </Link> */}
 
                 {/* Middle: Tagline */}
                 {settings?.tagline && (
@@ -68,6 +83,41 @@ export default function Header({ settings }) {
                     )}
                 </div>
             </div>
+
+            {/* ✅ Slider Section */}
+{images.length > 0 && (
+    <div className="relative w-full overflow-hidden h-[70vh] md:h-[80vh] bg-gray-100">
+        <div 
+            className="flex transition-transform duration-700 ease-in-out"
+            style={{ transform: `translateX(-${current * 100}%)` }}
+        >
+            {images.map((img, idx) => (
+                <img 
+                    key={idx} 
+                    src={img.startsWith("http") ? img : `/storage/${img}`} 
+                    alt={`Slide ${idx + 1}`}
+                    className="w-full h-[70vh] md:h-[80vh] object-cover flex-shrink-0"
+                    loading="lazy"
+                />
+            ))}
+        </div>
+
+        {/* Slider Dots */}
+        <div className="absolute bottom-5 left-0 right-0 flex justify-center space-x-2">
+            {images.map((_, idx) => (
+                <button 
+                    key={idx} 
+                    onClick={() => setCurrent(idx)}
+                    className={`w-3 h-3 rounded-full transition ${
+                        current === idx ? "bg-blue-600" : "bg-gray-300"
+                    }`}
+                />
+            ))}
+        </div>
+    </div>
+)}
+
+
         </header>
     );
 }

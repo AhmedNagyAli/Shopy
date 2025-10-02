@@ -22,24 +22,18 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Inertia::share([
-        'auth' => function () {
-            return [
-                'user' => auth()->user(),
-            ];
-        },
-    ]);
+            'auth' => function () {
+                return [
+                    'user' => auth()->user(),
+                ];
+            },
+        ]);
+
         Inertia::share('settings', function () {
-        $settings = Setting::all()->pluck('value', 'key')->toArray();
+            $settings = Setting::all()->pluck('value', 'key')->toArray();
 
-        // Try to decode JSON values
-        foreach ($settings as $key => $value) {
-            $decoded = json_decode($value, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                $settings[$key] = $decoded;
-            }
-        }
-
-        return $settings;
-    });
+            // 🚀 No need to decode again, it's already cast to array if JSON
+            return $settings;
+        });
     }
 }
