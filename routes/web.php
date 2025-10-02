@@ -23,7 +23,8 @@ Route::get('/search', [ProductController::class, 'search'])->name('search');
 Route::get('/categories/{slug}', [CategoryController::class, 'show'])->name('categories.show');
 
 Route::middleware(['auth'])->group(function () {
-    Route::post('/wishlist', [WishlistController::class, 'store'])->name('wishlist.store');
+    Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+    Route::get('/wishlist/user', [WishlistController::class, 'userWishlist'])->name('wishlist.user');
     Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
 });

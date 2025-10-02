@@ -28,7 +28,28 @@ export default function Show({ product, relatedProducts }) {
   const [selectedImage, setSelectedImage] = useState(allImages[0]?.url || "/images/placeholder.jpg");
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedAttributes, setSelectedAttributes] = useState({});
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
+
+
+  // Check if current variant is in user's wishlist
+  useEffect(() => {
+    const checkWishlist = async () => {
+      if (!selectedVariant) return;
+
+      try {
+        const { data } = await axios.get("/wishlist/user");
+        if (data.success) {
+          setIsInWishlist(data.wishlist.includes(selectedVariant.id));
+        }
+      } catch (err) {
+        console.error(err.response || err);
+      }
+    };
+
+    checkWishlist();
+  }, [selectedVariant]);
   // Organize attributes into color + size
   const { colorAttributes, sizeAttributes } = useMemo(() => {
     const colors = new Map();
@@ -92,26 +113,30 @@ export default function Show({ product, relatedProducts }) {
     
   }
 };
-//add the product to the wish list
-  const handleAddToWishlist = async () => {
-    if (!selectedVariant) return;
+
+const handleToggleWishlist = async () => {
+    if (!selectedVariant || wishlistLoading) return;
+    setWishlistLoading(true);
 
     try {
-      await axios.post("/wishlist", {
+      const { data } = await axios.post("/wishlist/toggle", {
         product_id: product.id,
         product_variant_id: selectedVariant.id,
-        attributes: selectedAttributes, // optional, if you want to store selected color/size
+        attributes: selectedAttributes,
       });
 
-      Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon: "success",
-        title: "Added to Wishlist!",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-      });
+      if (data.success) {
+        setIsInWishlist(data.action === "added");
+
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: data.action === "added" ? "success" : "info",
+          title: data.message,
+          showConfirmButton: false,
+          timer: 2000,
+        });
+      }
     } catch (err) {
       console.error(err.response || err);
       Swal.fire({
@@ -120,12 +145,12 @@ export default function Show({ product, relatedProducts }) {
         icon: "error",
         title: "Something went wrong!",
         showConfirmButton: false,
-        timer: 3000,
+        timer: 2000,
       });
+    } finally {
+      setWishlistLoading(false);
     }
   };
-
-
 
   // Available sizes for a given color
   const availableSizes = useMemo(() => {
@@ -334,14 +359,26 @@ export default function Show({ product, relatedProducts }) {
   {isOutOfStock ? "Out of Stock" : !selectedVariant ? "Select Options" : "Add to Cart"}
 </button>
 
-            <button
-  disabled={!selectedVariant}
-  onClick={handleAddToWishlist}
-  className="flex items-center gap-2 border border-gray-300 px-6 py-3 rounded-xl disabled:opacity-50"
->
-  <Heart className="w-5 h-5" /> 
-  {!selectedVariant ? "Select Options" : "Wishlist"}
-</button>
+          <button
+      disabled={!selectedVariant || wishlistLoading}
+      onClick={handleToggleWishlist}
+      className={`flex items-center gap-2 border px-6 py-3 rounded-xl disabled:opacity-50 transition ${
+        isInWishlist
+          ? "bg-red-100 border-red-400 text-red-600"
+          : "border-gray-300 text-gray-700"
+      }`}
+    >
+      <Heart
+        className={`w-5 h-5 ${
+          isInWishlist ? "fill-red-500 text-red-500" : ""
+        }`}
+      />
+      {!selectedVariant
+        ? "Select Options"
+        : isInWishlist
+        ? "In Wishlist"
+        : ""}
+    </button>
 
           </div>
         </div>
