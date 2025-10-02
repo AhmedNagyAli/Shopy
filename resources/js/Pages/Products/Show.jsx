@@ -3,8 +3,9 @@ import { ShoppingCart, Heart, Check } from "lucide-react";
 import ProductCard from "@/Components/ProductCard";
 import axios from "axios";
 import Swal from 'sweetalert2'
+import MainLayout from "@/Layouts/MainLayout"; 
 
-export default function Show({ product, relatedProducts }) {
+export default function Show({ product, relatedProducts,categories }) {
   // Collect unique images from variants
   const allImages = useMemo(() => {
     const imgs = [];
@@ -99,6 +100,7 @@ export default function Show({ product, relatedProducts }) {
         timer: 3000,
         timerProgressBar: true,
       });
+
     } catch (err) {
       console.error(err.response || err);
       Swal.fire({
@@ -229,7 +231,8 @@ export default function Show({ product, relatedProducts }) {
   const isOutOfStock = selectedVariant ? selectedVariant.stock === 0 : product.stock === 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10 space-y-16">
+    <MainLayout categories={categories}>
+      <div className="max-w-7xl mx-auto px-6 py-10 space-y-16">
       {/* Product Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Left: Images */}
@@ -405,5 +408,9 @@ export default function Show({ product, relatedProducts }) {
         </section>
       )}
     </div>
+
+    </MainLayout>
+  
+    
   );
 }

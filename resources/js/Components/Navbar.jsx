@@ -11,9 +11,29 @@ export default function Navbar({ categories = [] }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const cartRef = useRef(null);
+  const cartBtnRef = useRef(null);
+
 
   const menuRef = useRef(null);
   const btnRef = useRef(null);
+  useEffect(() => {
+  if (!isAuth) return;
+
+  const fetchCart = async () => {
+    try {
+      const { data } = await axios.get("/cart/items/fetch"); // your cart API route
+      setCartItems(data.cart || []);
+    } catch (err) {
+      console.error(err.response || err);
+    }
+  };
+
+  fetchCart();
+}, [isAuth]);
+
 
   useEffect(() => {
     function handleOutside(e) {
@@ -61,6 +81,18 @@ export default function Navbar({ categories = [] }) {
     setSearchQuery("");
   }
 };
+function handleOutside(e) {
+  if (
+    cartOpen &&
+    cartRef.current &&
+    !cartRef.current.contains(e.target) &&
+    cartBtnRef.current &&
+    !cartBtnRef.current.contains(e.target)
+  ) {
+    setCartOpen(false);
+  }
+}
+
 
 
   return (
@@ -133,6 +165,79 @@ export default function Navbar({ categories = [] }) {
               <UserIcon size={22} />
             </a>
           )}
+          {/* Cart */}
+<div className="relative">
+  <button
+    ref={cartBtnRef}
+    onClick={() => setCartOpen((s) => !s)}
+    className="p-2 rounded-md hover:bg-gray-100 transition-colors text-gray-600 relative"
+  >
+    <svg
+      className="w-6 h-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9h14l-2-9M9 21a1 1 0 100-2 1 1 0 000 2zm6 0a1 1 0 100-2 1 1 0 000 2z"
+      />
+    </svg>
+    {cartItems.length > 0 && (
+      <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
+        {cartItems.length}
+      </span>
+    )}
+  </button>
+
+  {/* Dropdown */}
+  {cartOpen && (
+    <div
+      ref={cartRef}
+      className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg ring-1 ring-gray-200 z-50 p-4"
+    >
+      {cartItems.length === 0 ? (
+        <p className="text-sm text-gray-500">Your cart is empty.</p>
+      ) : (
+        <>
+          <ul className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+            {cartItems.map((item) => (
+              <li key={item.id} className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <img
+  src={`/storage/${item.variant?.image || item.product?.main_image || "placeholder.jpg"}`}
+  alt={item.product?.name}
+  className="w-10 h-10 object-cover rounded"
+/>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{item.product?.name}</span>
+                    {item.variant && (
+                      <span className="text-xs text-gray-500">
+                        {item.variant?.values.map(v => v.value).join(" / ")}
+                      </span>
+                    )}
+                    <span className="text-sm text-gray-700">${item.variant?.final_price ?? item.product?.price}</span>
+                  </div>
+                </div>
+                <span className="text-sm text-gray-600">{item.quantity}x</span>
+              </li>
+            ))}
+          </ul>
+          <button
+            onClick={() => router.get("/cart")} // route to complete purchase
+            className="mt-3 w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Go to Cart
+          </button>
+        </>
+      )}
+    </div>
+  )}
+</div>
+
 
           {/* Search */}
           <div className="relative">

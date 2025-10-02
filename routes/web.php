@@ -33,8 +33,9 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+    Route::get('/cart/items/fetch', [CartController::class, 'fetch'])->name('cart.fetch');
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-});
+}); 
     
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');

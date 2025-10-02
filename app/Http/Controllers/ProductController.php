@@ -28,10 +28,15 @@ class ProductController extends Controller
          ->with('variants')
         ->take(8)
         ->get();
+    $categories = Category::with(['products' => function ($q) {
+            $q->latest()->take(1); // only latest product
+        }])->get();
+
 
     return Inertia::render('Products/Show', [
         'product' => $product,
         'relatedProducts' => $relatedProducts,
+         'categories' => $categories,
     ]);
 }
     public function search(Request $request)

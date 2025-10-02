@@ -21,12 +21,8 @@ class HomeController extends Controller
     ])
     ->latest()
     ->take(10)
-    ->when(auth()->check(), function ($query) {
-        $query->withExists(['wishlistedBy as is_wishlisted' => function ($q) {
-            $q->where('user_id', auth()->id());
-        }]);
-    })
     ->get();
+
     
 
         $categories = Category::with(['products' => function ($q) {
