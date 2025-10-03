@@ -165,11 +165,14 @@ function handleOutside(e) {
               <UserIcon size={22} />
             </a>
           )}
-          {/* Cart */}
+         {/* Cart */}
 <div className="relative">
   <button
     ref={cartBtnRef}
-    onClick={() => setCartOpen((s) => !s)}
+    onClick={() => {
+      setCartOpen((s) => !s);
+      if (!cartOpen) fetchCartItems(); // fetch when opening
+    }}
     className="p-2 rounded-md hover:bg-gray-100 transition-colors text-gray-600 relative"
   >
     <svg
@@ -195,47 +198,73 @@ function handleOutside(e) {
 
   {/* Dropdown */}
   {cartOpen && (
-    <div
-      ref={cartRef}
-      className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg ring-1 ring-gray-200 z-50 p-4"
-    >
-      {cartItems.length === 0 ? (
-        <p className="text-sm text-gray-500">Your cart is empty.</p>
-      ) : (
-        <>
-          <ul className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
-            {cartItems.map((item) => (
-              <li key={item.id} className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
-                  <img
-  src={`/storage/${item.variant?.image || item.product?.main_image || "placeholder.jpg"}`}
-  alt={item.product?.name}
-  className="w-10 h-10 object-cover rounded"
-/>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">{item.product?.name}</span>
-                    {item.variant && (
-                      <span className="text-xs text-gray-500">
-                        {item.variant?.values.map(v => v.value).join(" / ")}
-                      </span>
-                    )}
-                    <span className="text-sm text-gray-700">${item.variant?.final_price ?? item.product?.price}</span>
-                  </div>
+  <div
+    ref={cartRef}
+    className="absolute mt-2 left-2 bg-white rounded-lg shadow-lg ring-1 ring-gray-200 z-50 p-4"
+    style={{
+  left: '100%',
+  transform: 'translateX(-50%)',
+  right: 'auto',
+  top: '100%',
+  width: 'max-content',
+  maxWidth: 'calc(100vw - 2rem)'
+}}
+  >
+    {cartItems.length === 0 ? (
+      <p className="text-sm text-gray-500">Your cart is empty.</p>
+    ) : (
+      <>
+        <ul className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+          {cartItems.map((item) => (
+            <li key={item.id} className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-3">
+                <img
+                  src={`/storage/${item.variant?.image || item.product?.main_image || "placeholder.jpg"}`}
+                  alt={item.product?.name}
+                  className="w-10 h-10 object-cover rounded"
+                />
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{item.product?.name}</span>
+                  {item.variant && (
+                    <span className="text-xs text-gray-500">
+                      {item.variant?.values.map(v => v.value).join(" / ")}
+                    </span>
+                  )}
+                  <span className="text-sm text-gray-700">
+                    ${(item.variant?.final_price ?? item.product?.price).toFixed(2)}
+                  </span>
                 </div>
-                <span className="text-sm text-gray-600">{item.quantity}x</span>
-              </li>
-            ))}
-          </ul>
-          <button
-            onClick={() => router.get("/cart")} // route to complete purchase
-            className="mt-3 w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            Go to Cart
-          </button>
-        </>
-      )}
-    </div>
-  )}
+              </div>
+              <span className="text-sm text-gray-600">{item.quantity}x</span>
+            </li>
+          ))}
+        </ul>
+
+        {/* Cart Total */}
+        <div className="mt-3 flex justify-between items-center font-semibold text-gray-800">
+          <span>Total:</span>
+          <span>
+            $
+            {cartItems
+              .reduce(
+                (sum, item) => sum + (item.variant?.final_price ?? item.product?.price) * item.quantity,
+                0
+              )
+              .toFixed(2)}
+          </span>
+        </div>
+
+        <button
+          onClick={() => router.get("/cart")}
+          className="mt-3 w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition-colors"
+        >
+          Go to Cart
+        </button>
+      </>
+    )}
+  </div>
+)}
+
 </div>
 
 
