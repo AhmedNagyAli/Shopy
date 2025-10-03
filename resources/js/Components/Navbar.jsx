@@ -263,11 +263,12 @@ function handleOutside(e) {
         </div>
 
         <button
-          onClick={() => router.get("/cart")}
-          className="mt-3 w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition-colors"
-        >
-          Go to Cart
-        </button>
+  onClick={() => router.get("/cart")}
+  className="mt-3 w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition-colors"
+>
+  Go to Cart
+</button>
+
       </>
     )}
   </div>

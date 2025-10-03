@@ -85,7 +85,7 @@ export default function Show({ product, relatedProducts,categories }) {
     if (!selectedVariant) return;
 
     try {
-      await axios.post("/cart", {
+      await axios.post("/cart/add", {
         product_id: product.id,
         product_variant_id: selectedVariant.id,
         quantity: 1,

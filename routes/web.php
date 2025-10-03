@@ -32,9 +32,11 @@ Route::middleware(['auth'])->group(function () {
 //     ->name('wishlist.add');
 
 Route::middleware('auth')->group(function () {
-    Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
-    Route::get('/cart/items/fetch', [CartController::class, 'fetch'])->name('cart.fetch');
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add', [CartController::class, 'store'])->name('cart.store');
+    Route::get('/cart/items/fetch', [CartController::class, 'fetch'])->name('cart.fetch');
+    Route::post('/cart/items/{id}/update', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/items/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
 }); 
     
 Route::middleware('guest')->group(function () {
