@@ -24,44 +24,58 @@ export default function Navbar({ categories = [] }) {
 
   const fetchCart = async () => {
     try {
-      const { data } = await axios.get("/cart/items/fetch"); // your cart API route
+      const { data } = await axios.get("/cart/items/fetch");
       setCartItems(data.cart || []);
     } catch (err) {
       console.error(err.response || err);
     }
   };
 
-  fetchCart();
+  fetchCart(); // initial fetch
+
+  // Listen for global event
+  const handleCartUpdate = () => fetchCart();
+  window.addEventListener("cart:updated", handleCartUpdate);
+
+  return () => {
+    window.removeEventListener("cart:updated", handleCartUpdate);
+  };
 }, [isAuth]);
 
 
+
   useEffect(() => {
-    function handleOutside(e) {
-      if (
-        menuOpen &&
-        menuRef.current &&
-        !menuRef.current.contains(e.target) &&
-        btnRef.current &&
-        !btnRef.current.contains(e.target)
-      ) {
-        setMenuOpen(false);
-      }
+  function handleOutside(e) {
+    if (
+      cartOpen &&
+      cartRef.current &&
+      !cartRef.current.contains(e.target) &&
+      cartBtnRef.current &&
+      !cartBtnRef.current.contains(e.target)
+    ) {
+      setCartOpen(false);
     }
-    function handleEsc(e) {
-      if (e.key === "Escape") {
-        setMenuOpen(false);
-        setSearchOpen(false);
-      }
+  }
+
+  function handleEsc(e) {
+    if (e.key === "Escape") {
+      setCartOpen(false);
     }
+  }
+
+  if (cartOpen) {
     document.addEventListener("mousedown", handleOutside);
     document.addEventListener("touchstart", handleOutside);
     document.addEventListener("keydown", handleEsc);
-    return () => {
-      document.removeEventListener("mousedown", handleOutside);
-      document.removeEventListener("touchstart", handleOutside);
-      document.removeEventListener("keydown", handleEsc);
-    };
-  }, [menuOpen]);
+  }
+
+  return () => {
+    document.removeEventListener("mousedown", handleOutside);
+    document.removeEventListener("touchstart", handleOutside);
+    document.removeEventListener("keydown", handleEsc);
+  };
+}, [cartOpen]);
+
 
   const initials = user?.name
     ? user.name
@@ -200,15 +214,9 @@ function handleOutside(e) {
   {cartOpen && (
   <div
     ref={cartRef}
-    className="absolute mt-2 left-2 bg-white rounded-lg shadow-lg ring-1 ring-gray-200 z-50 p-4"
-    style={{
-  left: '100%',
-  transform: 'translateX(-50%)',
-  right: 'auto',
-  top: '100%',
-  width: 'max-content',
-  maxWidth: 'calc(100vw - 2rem)'
-}}
+    role="menu"
+    aria-orientation="vertical"
+    className="absolute left-0 mt-2 p-2 w-68 bg-white text-gray-800 rounded-lg shadow-xl ring-2 ring-gray-300 z-50 focus:outline-none"
   >
     {cartItems.length === 0 ? (
       <p className="text-sm text-gray-500">Your cart is empty.</p>

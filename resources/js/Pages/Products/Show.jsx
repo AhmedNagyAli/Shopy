@@ -90,6 +90,7 @@ export default function Show({ product, relatedProducts,categories }) {
         product_variant_id: selectedVariant.id,
         quantity: 1,
       });
+      window.dispatchEvent(new Event("cart:updated"));
 
       Swal.fire({
         toast: true,
