@@ -17,20 +17,41 @@ class ProductImageResource extends Resource
 {
     protected static ?string $model = ProductImage::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-photo';
+
+    protected static ?string $navigationGroup = 'Products';
+
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('product_id')
+                Forms\Components\Select::make('product_id')
+                    ->relationship('product', 'name')
                     ->required()
-                    ->numeric(),
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->columnSpanFull(),
+
                 Forms\Components\FileUpload::make('image_path')
+                    ->label('Image')
                     ->image()
-                    ->required(),
+                    ->required()
+                    ->directory('product-images')
+                    ->preserveFilenames()
+                    ->maxSize(2048)
+                    ->imageResizeMode('cover')
+                    ->imageCropAspectRatio('16:9')
+                    ->imageResizeTargetWidth('800')
+                    ->imageResizeTargetHeight('450')
+                    ->columnSpanFull(),
+
                 Forms\Components\Toggle::make('is_main')
-                    ->required(),
+                    ->label('Set as main image')
+                    ->default(false)
+                    ->inline(false),
             ]);
     }
 
@@ -38,31 +59,90 @@ class ProductImageResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('product_id')
-                    ->numeric()
+                Tables\Columns\ImageColumn::make('image_path')
+                    ->label('Image')
+                    ->size(60)
+                    ->square(),
+
+                Tables\Columns\TextColumn::make('product.name')
+                    ->label('Product')
+                    ->searchable()
                     ->sortable(),
-                Tables\Columns\ImageColumn::make('image_path'),
+
                 Tables\Columns\IconColumn::make('is_main')
-                    ->boolean(),
+                    ->label('Main Image')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-badge')
+                    ->falseIcon('heroicon-o-x-mark')
+                    ->trueColor('success')
+                    ->falseColor('gray'),
+
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Updated')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\Filter::make('main_images')
+                    ->label('Main Images Only')
+                    ->query(fn (Builder $query) => $query->where('is_main', true)),
+
+                Tables\Filters\Filter::make('secondary_images')
+                    ->label('Secondary Images Only')
+                    ->query(fn (Builder $query) => $query->where('is_main', false)),
+
+                Tables\Filters\SelectFilter::make('product')
+                    ->relationship('product', 'name')
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\Action::make('setMain')
+                    ->label('Set as Main')
+                    ->icon('heroicon-o-star')
+                    ->color('warning')
+                    ->action(function (ProductImage $record) {
+                        // Remove main status from other images of the same product
+                        ProductImage::where('product_id', $record->product_id)
+                            ->where('id', '!=', $record->id)
+                            ->update(['is_main' => false]);
+                        
+                        // Set this image as main
+                        $record->update(['is_main' => true]);
+                    })
+                    ->hidden(fn (ProductImage $record) => $record->is_main),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\BulkAction::make('setAsMain')
+                        ->label('Set as Main')
+                        ->icon('heroicon-o-star')
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                // Remove main status from other images of the same product
+                                ProductImage::where('product_id', $record->product_id)
+                                    ->whereNotIn('id', $records->pluck('id'))
+                                    ->update(['is_main' => false]);
+                                
+                                // Set selected images as main
+                                $record->update(['is_main' => true]);
+                            }
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
+            ])
+            ->emptyStateActions([
+                Tables\Actions\CreateAction::make(),
             ]);
     }
 
@@ -80,5 +160,15 @@ class ProductImageResource extends Resource
             'create' => Pages\CreateProductImage::route('/create'),
             'edit' => Pages\EditProductImage::route('/{record}/edit'),
         ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'success';
     }
 }

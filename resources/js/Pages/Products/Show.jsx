@@ -8,23 +8,41 @@ import MainLayout from "@/Layouts/MainLayout";
 export default function Show({ product, relatedProducts,categories }) {
   // Collect unique images from variants
   const allImages = useMemo(() => {
-    const imgs = [];
-    const seen = new Set();
+  const imgs = [];
+  const seen = new Set();
 
-    if (product.variants?.length) {
-      product.variants.forEach((variant) => {
-        if (variant.image && !seen.has(variant.image)) {
-          seen.add(variant.image);
-          imgs.push({
-            id: `variant-${variant.id}`,
-            url: `/storage/${variant.image}`,
-            variantId: variant.id,
-          });
-        }
-      });
-    }
-    return imgs;
-  }, [product]);
+  // ✅ Variant images
+  if (product.variants?.length) {
+    product.variants.forEach((variant) => {
+      if (variant.image && !seen.has(variant.image)) {
+        seen.add(variant.image);
+        imgs.push({
+          id: `variant-${variant.id}`,
+          url: `/storage/${variant.image}`,
+          variantId: variant.id,
+        });
+      }
+    });
+  }
+
+  // ✅ Product images
+  if (product.images?.length) {
+    product.images.forEach((img) => {
+      if (img.image && !seen.has(img.image)) {
+        seen.add(img.image);
+        imgs.push({
+          id: `product-${img.id}`,
+          url: `/storage/${img.image}`,
+          variantId: null,
+        });
+      }
+    });
+  }
+  console.log(imgs)
+
+  return imgs;
+}, [product]);
+
 
   const [selectedImage, setSelectedImage] = useState(allImages[0]?.url || "/images/placeholder.jpg");
   const [selectedVariant, setSelectedVariant] = useState(null);
