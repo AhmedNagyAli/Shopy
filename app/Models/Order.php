@@ -7,11 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     protected $fillable = [
-        'user_id', 'address_id', 'order_number',
-        'subtotal', 'discount', 'tax', 'shipping_cost', 'total_amount',
-        'payment_status', 'payment_method', 'transaction_id',
-        'shipping_status', 'tracking_number', 'carrier',
-        'status', 'notes'
+        'user_id',
+         'user_address_id',
+          'order_number',
+        'subtotal',
+         'discount',
+          'tax',
+           'shipping_cost',
+            'total_amount',
+        'payment_status',
+         'payment_method',
+          'transaction_id',
+        'shipping_status',
+         'tracking_number',
+          'carrier',
+        'status',
+         'notes'
     ];
 
     public function user()
@@ -21,6 +32,10 @@ class Order extends Model
 
     public function address()
     {
-        return $this->belongsTo(UserAddress::class, 'address_id');
+        return $this->belongsTo(UserAddress::class, 'user_address_id');
+    }
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 }

@@ -5,56 +5,85 @@ import Swal from 'sweetalert2'
 export default function CartPage() {
   const { cart = [], settings } = usePage().props;
   const shippingFee = parseFloat(settings?.shipping_fee || 0);
+  const freeShippingThreshold = parseFloat(settings?.free_shipping_thershold || 0);
+
   const toast = Swal.mixin({
-  toast: true,
-  position: "top-end", // top corner
-  showConfirmButton: false,
-  timer: 3000,
-  timerProgressBar: true,
-});
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+  });
 
   const handleRemove = (id) => {
-  router.delete(`/cart/items/${id}`, {
-    onSuccess: () => {
-      window.dispatchEvent(new Event("cart:updated"));
-      toast.fire({
-        icon: "success",
-        title: "Item removed from cart",
-      });
-    },
-    onError: () => {
-      toast.fire({
-        icon: "error",
-        title: "Failed to remove item",
-      });
-    },
-  });
-};
+    router.delete(`/cart/items/${id}`, {
+      onSuccess: () => {
+        window.dispatchEvent(new Event("cart:updated"));
+        toast.fire({
+          icon: "success",
+          title: "Item removed from cart",
+        });
+      },
+      onError: () => {
+        toast.fire({
+          icon: "error",
+          title: "Failed to remove item",
+        });
+      },
+    });
+  };
 
-const handleUpdateQuantity = (id, type) => {
-  router.post(`/cart/items/${id}/update`, { type }, {
-    onSuccess: () => {
-      window.dispatchEvent(new Event("cart:updated"));
-      toast.fire({
-        icon: "success",
-        title: type === "increase" ? "Quantity increased" : "Quantity decreased",
-      });
-    },
-    onError: () => {
-      toast.fire({
-        icon: "error",
-        title: "Failed to update quantity",
-      });
-    },
-  });
-};
+  const handleUpdateQuantity = (id, type) => {
+    router.post(`/cart/items/${id}/update`, { type }, {
+      onSuccess: () => {
+        window.dispatchEvent(new Event("cart:updated"));
+        toast.fire({
+          icon: "success",
+          title: type === "increase" ? "Quantity increased" : "Quantity decreased",
+        });
+      },
+      onError: () => {
+        toast.fire({
+          icon: "error",
+          title: "Failed to update quantity",
+        });
+      },
+    });
+  };
 
   const subtotal = cart.reduce(
     (sum, item) =>
       sum + (item.variant?.final_price ?? item.product?.price) * item.quantity,
     0
   );
-  const total = subtotal + shippingFee;
+
+  // ✅ Apply free shipping rule
+  const qualifiesForFreeShipping = subtotal >= freeShippingThreshold;
+  const appliedShipping = qualifiesForFreeShipping ? 0 : shippingFee;
+  const total = subtotal + appliedShipping;
+  // ✅ Checkout handler
+  const handleCheckout = () => {
+    router.post(
+      route("order.place"),
+      { shipping_fee: appliedShipping, total: total },
+      {
+        onSuccess: () => {
+          Swal.fire({
+            icon: "success",
+            title: "Order placed successfully!",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        },
+        onError: () => {
+          Swal.fire({
+            icon: "error",
+            title: "Failed to place order",
+          });
+        },
+      }
+    );
+  };
 
   return (
     <div className="max-w-5xl mx-auto p-6">
@@ -125,19 +154,33 @@ const handleUpdateQuantity = (id, type) => {
             </div>
             <div className="flex justify-between mb-2">
               <span className="text-gray-600">Shipping</span>
-              <span>${shippingFee.toFixed(2)}</span>
+              {qualifiesForFreeShipping ? (
+                <span className="text-green-600 font-semibold">Free</span>
+              ) : (
+                <span>${shippingFee.toFixed(2)}</span>
+              )}
             </div>
             <div className="flex justify-between font-bold text-gray-900 text-lg border-t pt-2">
               <span>Total</span>
               <span>${total.toFixed(2)}</span>
             </div>
 
-            <button className="mt-4 w-full bg-gray-900 text-white py-3 rounded-xl hover:bg-green-900 transition">
-              Checkout
-            </button>
+            {qualifiesForFreeShipping && (
+              <p className="text-sm text-green-600 mt-2">
+                🎉 Your order will be shipped free
+              </p>
+            )}
+
+            <button
+          onClick={handleCheckout}
+          className="mt-4 w-full bg-gray-900 text-white py-3 rounded-xl hover:bg-green-900 transition"
+        >
+          Checkout
+        </button>
           </div>
         </div>
       )}
     </div>
   );
 }
+

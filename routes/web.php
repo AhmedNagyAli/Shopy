@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Models\Coupon;
 use App\Models\Product;
@@ -38,7 +39,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart/items/{id}/update', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/items/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
 }); 
-    
+  
+
+Route::middleware('auth')->group(function () {
+    Route::post('/orders/place', [OrderController::class, 'store'])->name('order.place');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+});
+
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
