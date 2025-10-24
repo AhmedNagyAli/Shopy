@@ -28,11 +28,11 @@ export default function Show({ product, relatedProducts,categories }) {
   // ✅ Product images
   if (product.images?.length) {
     product.images.forEach((img) => {
-      if (img.image && !seen.has(img.image)) {
-        seen.add(img.image);
+      if (img.image_path && !seen.has(img.image_path)) {
+        seen.add(img.image_path);
         imgs.push({
           id: `product-${img.id}`,
-          url: `/storage/${img.image}`,
+          url: `/storage/${img.image_path}`,
           variantId: null,
         });
       }
