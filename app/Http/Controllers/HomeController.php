@@ -20,14 +20,15 @@ class HomeController extends Controller
         'categories',
     ])
     ->latest()
-    ->take(10)
+    ->take(8)
     ->get();
 
     
 
         $categories = Category::with(['products' => function ($q) {
             $q->latest()->take(1); // only latest product
-        }])->get();
+        }])->take(10)
+    ->get();
 
         return Inertia::render('Home/Home', [
             'products'   => $products,
