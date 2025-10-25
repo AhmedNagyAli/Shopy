@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
+    public function index(Request $request){
+        dump($request);
+
+    }
     public function store(Request $request)
     {
         //stopping here for some days
