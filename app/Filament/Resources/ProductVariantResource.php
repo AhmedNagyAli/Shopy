@@ -21,7 +21,7 @@ class ProductVariantResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
     
-    protected static ?string $navigationGroup = 'Catalog';
+    protected static ?string $navigationGroup = 'Products';
     
     protected static ?string $navigationLabel = 'Variants';
     

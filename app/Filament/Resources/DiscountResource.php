@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class DiscountResource extends Resource
 {
     protected static ?string $model = Discount::class;
+    protected static ?string $navigationGroup = 'Products';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
