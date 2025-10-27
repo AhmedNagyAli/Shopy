@@ -311,10 +311,13 @@ function handleOutside(e) {
           </div>
         </div>
 
-        {/* Center: Site title */}
-        <h1 className="text-lg md:text-xl font-bold text-gray-900 text-center">
+        {/* Center: Site title as link */}
+        <a 
+          href="/" 
+          className="text-lg md:text-xl font-bold text-gray-900 text-center hover:text-blue-600 transition-colors"
+        >
           {settings?.site_name || "My Shop"}
-        </h1>
+        </a>
 
         {/* Right: 3-dash menu */}
         <button

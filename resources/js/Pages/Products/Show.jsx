@@ -524,7 +524,7 @@ export default function Show({ product, relatedProducts, categories, auth }) {
                     <ShoppingCart className="w-8 h-8 text-white" />
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    Welcome Back
+                    login to continue
                   </h2>
                   <p className="text-gray-600 text-sm">
                     Sign in to continue shopping
