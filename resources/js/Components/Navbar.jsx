@@ -208,13 +208,7 @@ export default function Navbar({ categories = [] }) {
     {cartItems.length === 0 ? (
       <div className="p-6 text-center">
         <p className="text-sm text-gray-500">Your cart is empty.</p>
-        <a
-          href="/categories"
-          className="mt-3 inline-block text-blue-600 font-medium text-sm hover:underline"
-          onClick={() => setCartOpen(false)}
-        >
-          Browse Products
-        </a>
+        
       </div>
     ) : (
       <>

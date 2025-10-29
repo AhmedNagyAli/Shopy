@@ -62,6 +62,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/addresses', [UserAddressController::class, 'store'])->name('addresses.store');
 });
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+});
+
+
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 

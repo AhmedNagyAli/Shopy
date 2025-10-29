@@ -12,10 +12,27 @@ use Inertia\Inertia;
 
 class OrderController extends Controller
 {
-    public function index(Request $request){
-        dump($request);
 
+    public function index()
+    {
+        $user = Auth::user();
+
+        $orders = Order::with([
+            'items.product:id,name,main_image,slug',
+            'items.variant.values.attribute',
+            'address.city',
+            'address.country',
+        ])
+            ->where('user_id', $user->id)
+            ->latest()
+            ->get();
+
+        return Inertia::render('Orders/Index', [
+            'orders' => $orders,
+        ]);
     }
+
+
     public function store(Request $request)
     {
         //stopping here for some days
