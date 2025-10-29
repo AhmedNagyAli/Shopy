@@ -11,6 +11,10 @@ export default function ProductCard({ product }) {
     // ✅ Prices
     const variantPrice = defaultVariant?.price ?? product.price;
     const finalPrice = defaultVariant?.final_price ?? variantPrice;
+    if(product.discounts){
+        console.log(product.discounts)
+
+    }
 
     // ✅ Image
     const imageUrl =
