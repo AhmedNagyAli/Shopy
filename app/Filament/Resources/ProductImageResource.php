@@ -41,11 +41,11 @@ class ProductImageResource extends Resource
                     ->required()
                     ->directory('product-images')
                     ->preserveFilenames()
-                    ->maxSize(2048)
+                    ->maxSize(5120)
                     ->imageResizeMode('cover')
-                    ->imageCropAspectRatio('16:9')
-                    ->imageResizeTargetWidth('800')
-                    ->imageResizeTargetHeight('450')
+                    //->imageCropAspectRatio('16:9')
+                    //->imageResizeTargetWidth('800')
+                    //->imageResizeTargetHeight('450')
                     ->columnSpanFull(),
 
                 Forms\Components\Toggle::make('is_main')

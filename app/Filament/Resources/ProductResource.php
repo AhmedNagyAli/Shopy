@@ -96,9 +96,9 @@ class ProductResource extends Resource
                             ->directory('products/main')
                             ->maxSize(5120)
                             ->imageResizeMode('cover')
-                            ->imageCropAspectRatio('1:1')
-                            ->imageResizeTargetWidth('800')
-                            ->imageResizeTargetHeight('800')
+                            //->imageCropAspectRatio('1:1')
+                            //->imageResizeTargetWidth('800')
+                            //->imageResizeTargetHeight('800')
                             ->getUploadedFileNameForStorageUsing(
                                 fn (TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalName())
                                     ->prepend('product-main-'),
