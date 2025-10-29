@@ -68,6 +68,29 @@ class CartController extends Controller
             'cart' => $cartItems,
         ]);
     }
+     public function getCartItems(Request $request)
+    {
+        logger("ffff");
+        $user = Auth::user();
+        
+        if (!$user) {
+            return response()->json(['cart' => []]);
+        }
+
+        // Eager load relationships to avoid N+1 queries
+        $cartItems = Cart::with([
+            'product',         // eager load product
+            'variant.values',
+            'variant.values.attribute' // load variant attribute values (color/size)
+        ])
+        ->where('user_id', $user->id)
+        ->get();
+
+        return response()->json([
+            'success' => true,
+            'cart' => $cartItems,
+        ]);
+    }
 
     public function index()
     {

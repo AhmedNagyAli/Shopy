@@ -15,67 +15,67 @@ export default function Navbar({ categories = [] }) {
   const [cartItems, setCartItems] = useState([]);
   const cartRef = useRef(null);
   const cartBtnRef = useRef(null);
-
-
   const menuRef = useRef(null);
   const btnRef = useRef(null);
-  useEffect(() => {
-  if (!isAuth) return;
 
-  const fetchCart = async () => {
+  // Fetch cart items function
+  const fetchCartItems = async () => {
     try {
-      const { data } = await axios.get("/cart/items/fetch");
-      setCartItems(data.cart || []);
+      const response = await fetch("/cart/items");
+      if (response.ok) {
+        const data = await response.json();
+        setCartItems(data.cart || []);
+      }
     } catch (err) {
-      console.error(err.response || err);
+      console.error("Failed to fetch cart:", err);
     }
   };
-
-  fetchCart(); // initial fetch
-
-  // Listen for global event
-  const handleCartUpdate = () => fetchCart();
-  window.addEventListener("cart:updated", handleCartUpdate);
-
-  return () => {
-    window.removeEventListener("cart:updated", handleCartUpdate);
-  };
-}, [isAuth]);
-
-
 
   useEffect(() => {
-  function handleOutside(e) {
-    if (
-      cartOpen &&
-      cartRef.current &&
-      !cartRef.current.contains(e.target) &&
-      cartBtnRef.current &&
-      !cartBtnRef.current.contains(e.target)
-    ) {
-      setCartOpen(false);
+    if (!isAuth) return;
+
+    fetchCartItems(); // initial fetch
+
+    // Listen for global event
+    const handleCartUpdate = () => fetchCartItems();
+    window.addEventListener("cart:updated", handleCartUpdate);
+
+    return () => {
+      window.removeEventListener("cart:updated", handleCartUpdate);
+    };
+  }, [isAuth]);
+
+  useEffect(() => {
+    function handleOutside(e) {
+      if (
+        cartOpen &&
+        cartRef.current &&
+        !cartRef.current.contains(e.target) &&
+        cartBtnRef.current &&
+        !cartBtnRef.current.contains(e.target)
+      ) {
+        setCartOpen(false);
+      }
     }
-  }
 
-  function handleEsc(e) {
-    if (e.key === "Escape") {
-      setCartOpen(false);
+    function handleEsc(e) {
+      if (e.key === "Escape") {
+        setCartOpen(false);
+      }
     }
-  }
 
-  if (cartOpen) {
-    document.addEventListener("mousedown", handleOutside);
-    document.addEventListener("touchstart", handleOutside);
-    document.addEventListener("keydown", handleEsc);
-  }
+    if (cartOpen) {
+      document.addEventListener("mousedown", handleOutside);
+      document.addEventListener("touchstart", handleOutside);
+      document.addEventListener("keydown", handleEsc);
+    }
 
-  return () => {
-    document.removeEventListener("mousedown", handleOutside);
-    document.removeEventListener("touchstart", handleOutside);
-    document.removeEventListener("keydown", handleEsc);
-  };
-}, [cartOpen]);
-
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("touchstart", handleOutside);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [cartOpen]);
 
   const initials = user?.name
     ? user.name
@@ -87,27 +87,14 @@ export default function Navbar({ categories = [] }) {
     : "";
 
   // Handle search submit
- const handleSearch = (e) => {
-  e.preventDefault();
-  if (searchQuery.trim() !== "") {
-    router.get('/search', { q: searchQuery }); 
-    setSearchOpen(false);
-    setSearchQuery("");
-  }
-};
-function handleOutside(e) {
-  if (
-    cartOpen &&
-    cartRef.current &&
-    !cartRef.current.contains(e.target) &&
-    cartBtnRef.current &&
-    !cartBtnRef.current.contains(e.target)
-  ) {
-    setCartOpen(false);
-  }
-}
-
-
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim() !== "") {
+      router.get('/search', { q: searchQuery }); 
+      setSearchOpen(false);
+      setSearchQuery("");
+    }
+  };
 
   return (
     <nav className="w-full bg-white text-gray-800 shadow-lg sticky top-0 z-50 border-b border-gray-200">
@@ -179,103 +166,144 @@ function handleOutside(e) {
               <UserIcon size={22} />
             </a>
           )}
-         {/* Cart */}
-<div className="relative">
-  <button
-    ref={cartBtnRef}
-    onClick={() => {
-      setCartOpen((s) => !s);
-      if (!cartOpen) fetchCartItems(); // fetch when opening
-    }}
-    className="p-2 rounded-md hover:bg-gray-100 transition-colors text-gray-600 relative"
-  >
-    <svg
-      className="w-6 h-6"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9h14l-2-9M9 21a1 1 0 100-2 1 1 0 000 2zm6 0a1 1 0 100-2 1 1 0 000 2z"
-      />
-    </svg>
-    {cartItems.length > 0 && (
-      <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
-        {cartItems.length}
-      </span>
-    )}
-  </button>
 
-  {/* Dropdown */}
-  {cartOpen && (
+          {/* Cart */}
+          <div className="relative">
+            <button
+              ref={cartBtnRef}
+              onClick={() => {
+                setCartOpen((s) => !s);
+                if (!cartOpen) fetchCartItems(); // fetch when opening
+              }}
+              className="p-2 rounded-md hover:bg-gray-100 transition-colors text-gray-600 relative"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9h14l-2-9M9 21a1 1 0 100-2 1 1 0 000 2zm6 0a1 1 0 100-2 1 1 0 000 2z"
+                />
+              </svg>
+              {cartItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
+                  {cartItems.length}
+                </span>
+              )}
+            </button>
+
+            {cartOpen && (
   <div
     ref={cartRef}
     role="menu"
     aria-orientation="vertical"
-    className="absolute left-0 mt-2 p-2 w-68 bg-white text-gray-800 rounded-lg shadow-xl ring-2 ring-gray-300 z-50 focus:outline-none"
+    className="absolute left-0 mt-2 w-64 md:w-80 bg-white text-gray-800 rounded-xl shadow-2xl ring-1 ring-gray-300 z-50 focus:outline-none"
   >
     {cartItems.length === 0 ? (
-      <p className="text-sm text-gray-500">Your cart is empty.</p>
+      <div className="p-6 text-center">
+        <p className="text-sm text-gray-500">Your cart is empty.</p>
+        <a
+          href="/categories"
+          className="mt-3 inline-block text-blue-600 font-medium text-sm hover:underline"
+          onClick={() => setCartOpen(false)}
+        >
+          Browse Products
+        </a>
+      </div>
     ) : (
       <>
-        <ul className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
-          {cartItems.map((item) => (
-            <li key={item.id} className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-3">
-                <img
-                  src={`/storage/${item.variant?.image || item.product?.main_image || "placeholder.jpg"}`}
-                  alt={item.product?.name}
-                  className="w-10 h-10 object-cover rounded"
-                />
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">{item.product?.name}</span>
-                  {item.variant && (
-                    <span className="text-xs text-gray-500">
-                      {item.variant?.values.map(v => v.value).join(" / ")}
+        {/* Cart Items */}
+        <ul className="divide-y divide-gray-100 max-h-72 overflow-y-auto">
+          {cartItems.map((item) => {
+            const price = (item.variant?.final_price ?? item.product?.price) || 0;
+            const total = price * item.quantity;
+            
+            return (
+              <li key={item.id} className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-lg transition-colors">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <img
+                    src={`/storage/${item.variant?.image || item.product?.main_image || "placeholder.jpg"}`}
+                    alt={item.product?.name}
+                    className="w-14 h-14 object-cover rounded-lg flex-shrink-0 border border-gray-200"
+                  />
+                  <div className="flex flex-col min-w-0 flex-1 max-w-[calc(100%-4rem)]">
+                    {/* Product Name with Proper Truncation */}
+                    <span 
+                      className="text-sm font-semibold truncate"
+                      title={item.product?.name}
+                    >
+                      {item.product?.name}
                     </span>
-                  )}
-                  <span className="text-sm text-gray-700">
-                    ${(item.variant?.final_price ?? item.product?.price).toFixed(2)}
-                  </span>
+                    
+                    {/* Variant Info with Truncation */}
+                    {item.variant && (
+                      <span className="text-xs text-gray-500 truncate mt-0.5">
+                        {item.variant?.values?.map(v => v.value).join(" / ") || ""}
+                      </span>
+                    )}
+                    
+                    {/* Price and Quantity in one line */}
+                    <div className="flex items-center justify-between mt-1.5">
+                      <span className="text-sm text-gray-700 font-medium">
+                        ${total.toFixed(2)}
+                      </span>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        {item.quantity}x
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <span className="text-sm text-gray-600">{item.quantity}x</span>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
 
-        {/* Cart Total */}
-        <div className="mt-3 flex justify-between items-center font-semibold text-gray-800">
-          <span>Total:</span>
+        {/* Cart Summary */}
+        <div className="border-t border-gray-200 mt-3 px-4 py-3 flex justify-between items-center font-semibold text-gray-800">
+          <span>Subtotal:</span>
           <span>
             $
             {cartItems
               .reduce(
-                (sum, item) => sum + (item.variant?.final_price ?? item.product?.price) * item.quantity,
+                (sum, item) => sum + ((item.variant?.final_price ?? item.product?.price) || 0) * item.quantity,
                 0
               )
               .toFixed(2)}
           </span>
         </div>
 
-        <button
-  onClick={() => router.get("/cart")}
-  className="mt-3 w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition-colors"
->
-  Go to Cart
-</button>
-
+        {/* Actions */}
+        <div className="px-4 pb-4 flex flex-col gap-2">
+          <button
+            onClick={() => {
+              router.get("/cart");
+              setCartOpen(false);
+            }}
+            className="w-full bg-gray-900 text-white py-2.5 rounded-lg hover:bg-gray-800 transition-colors font-medium text-sm"
+          >
+            View Cart
+          </button>
+          {/* <button
+            onClick={() => {
+              router.get("/checkout");
+              setCartOpen(false);
+            }}
+            className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-500 transition-colors font-medium text-sm"
+          >
+            Checkout
+          </button> */}
+        </div>
       </>
     )}
   </div>
 )}
-
-</div>
-
+          </div>
 
           {/* Search */}
           <div className="relative">

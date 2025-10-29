@@ -1,5 +1,4 @@
 export default function TestImage({ product }) {
-    console.log("TestImage product:", product);
 
     return (
         <div>
@@ -12,7 +11,6 @@ export default function TestImage({ product }) {
                 alt="Test Product"
                 style={{ width: "400px", height: "400px", border: "1px solid red" }}
                 onError={(e) => {
-                    console.log("Image failed:", product.main_image);
                     e.currentTarget.src = "/images/image.png";
                 }}
             />

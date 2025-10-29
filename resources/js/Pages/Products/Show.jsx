@@ -20,7 +20,6 @@ export default function Show({ product, relatedProducts, categories, auth }) {
             url: `/storage/${product.main_image}`,
             variantId:null,
           });
-      console.log(product.main_image);
     }
 
     // Variant images

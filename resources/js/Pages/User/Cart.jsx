@@ -4,7 +4,6 @@ import Swal from 'sweetalert2'
 import { useState } from "react";
 
 export default function CartPage({ gateways: initialGateways }) {
-  console.log(initialGateways);
   const { cart = [], settings } = usePage().props;
   const shippingFee = parseFloat(settings?.shipping_fee || 0);
   const freeShippingThreshold = parseFloat(settings?.free_shipping_thershold || 0);
@@ -194,7 +193,7 @@ export default function CartPage({ gateways: initialGateways }) {
                     </p>
                   )}
                   <p className="text-gray-700 font-semibold">
-                    ${(item.variant?.final_price ?? item.product?.price).toFixed(2)}
+                    ${(item.variant?.final_price ?? item.product?.price)}
                   </p>
                 </div>
 
