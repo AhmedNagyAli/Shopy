@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\UserAddressController;
 use App\Models\Coupon;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -54,6 +55,11 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/addresses/create', [UserAddressController::class, 'create'])->name('addresses.create');
+    Route::post('/addresses', [UserAddressController::class, 'store'])->name('addresses.store');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
