@@ -102,44 +102,65 @@ export default function ProductCard({ product }) {
                     )}
                 </div>
 
-                {/* Variant thumbnails & Sizes */}
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                    {/* Color Variants as Circles */}
-                    {colorVariants.length > 0 && (
-                        <div className="flex items-center gap-2">
-                            {colorVariants.map(variant => (
-                                <img
-                                    key={variant.id}
-                                    src={
-                                        variant.image
-                                            ? `/storage/${variant.image}`
-                                            : '/images/placeholder.jpg'
-                                    }
-                                    alt={variant.values?.find(v => v.attribute?.slug === 'color')?.value}
-                                    className="w-9 h-9 rounded-full border border-gray-200 object-cover shadow-sm cursor-pointer hover:scale-110 transition-transform"
-                                    loading="lazy"
-                                />
-                            ))}
-                        </div>
-                    )}
+                {/* 🎨 Color Variants & Sizes */}
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          {/* Color Circles */}
+          <div className="flex flex-col gap-2">
+            {colorVariants.length > 0 && (
+              <div className="flex items-center gap-2">
+                {colorVariants.map((variant) => {
+                  const colorVal = variant.values?.find(
+                    (v) =>
+                      v.attribute?.slug === "color" ||
+                      v.attribute?.name?.toLowerCase() === "color"
+                  );
+                  const colorCode = colorVal?.color_code || "#ccc";
 
-                    {/* Sizes */}
-                    {sizes.length > 0 && (
-                        <div className="flex items-center gap-1">
-                            {sizes.map(size => (
-                                <span
-                                    key={size.id}
-                                    className="px-2 py-0.5 text-xs rounded border border-gray-300 bg-gray-50 text-gray-700"
-                                >
-                                    {size.value}
-                                </span>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                  const imgToShow = variant.image
+                    ? `/storage/${variant.image}`
+                    : product.main_image
+                    ? `/storage/${product.main_image}`
+                    : product.images?.[0]
+                    ? `/storage/${product.images[0].image_path}`
+                    : null;
+
+                  return imgToShow ? (
+                    <img
+                      key={variant.id}
+                      src={imgToShow}
+                      alt={colorVal?.value}
+                      className="w-9 h-9 rounded-full border border-gray-200 object-cover shadow-sm cursor-pointer hover:scale-110 transition-transform"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div
+                      key={variant.id}
+                      className="w-9 h-9 rounded-full border border-gray-300 shadow-sm cursor-pointer hover:scale-110 transition-transform"
+                      style={{ backgroundColor: colorCode }}
+                    />
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Sizes */}
+            {sizes.length > 0 && (
+              <div className="flex items-center gap-1">
+                {sizes.map((size) => (
+                  <span
+                    key={size.id}
+                    className="px-2 py-0.5 text-xs rounded border border-gray-300 bg-gray-50 text-gray-700"
+                  >
+                    {size.value}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
                 {/* Badges */}
-                <div className="flex flex-wrap gap-1 mt-3">
+                {/* <div className="flex flex-wrap gap-1 mt-3">
                     {defaultVariant?.stock === 0 && (
                         <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
                             Out of Stock
@@ -160,7 +181,7 @@ export default function ProductCard({ product }) {
                             Best Seller
                         </span>
                     )}
-                </div>
+                </div> */}
             </div>
         </Link>
     );
