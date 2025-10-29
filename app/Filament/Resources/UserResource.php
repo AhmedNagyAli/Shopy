@@ -51,7 +51,7 @@ class UserResource extends Resource
                             ->image()
                             ->avatar()
                             ->directory('avatars')
-                            ->maxSize(2048),
+                            ->maxSize(5210),
                         Forms\Components\Toggle::make('is_active')
                             ->required()
                             ->default(true),

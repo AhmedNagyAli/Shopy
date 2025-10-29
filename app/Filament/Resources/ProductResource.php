@@ -230,9 +230,6 @@ Forms\Components\Section::make('Product Attributes')
                                     ->directory('products/variants')
                                     ->maxSize(5120)
                                     ->imageResizeMode('cover')
-                                    ->imageCropAspectRatio('1:1')
-                                    ->imageResizeTargetWidth('600')
-                                    ->imageResizeTargetHeight('600')
                                     ->getUploadedFileNameForStorageUsing(
                                         fn (TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalName())
                                             ->prepend('variant-'),

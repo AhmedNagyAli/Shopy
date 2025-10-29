@@ -66,11 +66,8 @@ class ProductVariantResource extends Resource
                             ->image()
                             ->directory('product-variants')
                             ->visibility('public')
-                            ->maxSize(2048)
-                            ->imageResizeMode('cover')
-                            ->imageCropAspectRatio('1:1')
-                            ->imageResizeTargetWidth('400')
-                            ->imageResizeTargetHeight('400'),
+                            ->maxSize(5120)
+                            ->imageResizeMode('cover'),
                     ])->columns(2),
                 
                 Forms\Components\Section::make('Variant Attributes')
