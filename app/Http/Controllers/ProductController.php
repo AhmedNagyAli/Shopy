@@ -14,6 +14,7 @@ class ProductController extends Controller
 {
     
     $product = Product::with([
+        'discounts',
         'variants.values',
         'variants.values.attribute', 
         'images',
@@ -46,6 +47,7 @@ class ProductController extends Controller
 
     $products = Product::
     with([
+        'discounts',
         'variants.values',
         'variants.values.attribute', 
         'images',

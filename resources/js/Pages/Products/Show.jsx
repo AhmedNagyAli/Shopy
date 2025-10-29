@@ -12,6 +12,16 @@ export default function Show({ product, relatedProducts, categories, auth }) {
   const allImages = useMemo(() => {
     const imgs = [];
     const seen = new Set();
+    // Product main_image
+    if (product.main_image) {
+      seen.add(product.main_image);
+      imgs.push({
+            id: `product-${product.id}`,
+            url: `/storage/${product.main_image}`,
+            variantId:null,
+          });
+      console.log(product.main_image);
+    }
 
     // Variant images
     if (product.variants?.length) {
@@ -283,8 +293,41 @@ export default function Show({ product, relatedProducts, categories, auth }) {
     }
   }, [product.variants, selectedVariant]);
 
-  const variantPrice = selectedVariant?.price ?? product.price;
-  const finalPrice = selectedVariant?.final_price ?? variantPrice;
+  // Get base prices
+const variantBasePrice = selectedVariant?.price ?? product.price;
+const productBasePrice = product.price;
+
+// 1️⃣ Check for variant discount first
+const variantDiscount = selectedVariant?.discounts?.find((d) => d.is_active);
+const productDiscount = product?.discounts?.find((d) => d.is_active);
+
+let finalPrice = variantBasePrice;
+
+// Helper function to calculate discounted price
+const applyDiscount = (price, discount) => {
+  if (!discount) return price;
+  if (discount.type === "percentage") {
+    return Math.max(price - (price * discount.value) / 100, 0);
+  }
+  if (discount.type === "fixed") {
+    return Math.max(price - discount.value, 0);
+  }
+  return price;
+};
+
+// Apply variant discount first
+if (variantDiscount) {
+  finalPrice = applyDiscount(variantBasePrice, variantDiscount);
+}
+// If no variant discount, check product discount
+else if (productDiscount) {
+  finalPrice = applyDiscount(productBasePrice, productDiscount);
+}
+// If no discounts at all, use the variant's final price if it exists
+else {
+  finalPrice = selectedVariant?.final_price ?? variantBasePrice;
+}
+
   const isOutOfStock = selectedVariant
     ? selectedVariant.stock === 0
     : product.stock === 0;
@@ -342,15 +385,17 @@ export default function Show({ product, relatedProducts, categories, auth }) {
             <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
 
             <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-2xl font-bold text-gray-900">
-                LE:{finalPrice}
-              </span>
-              {finalPrice < variantPrice && (
-                <span className="text-sm text-gray-600 line-through">
-                  LE:{variantPrice}
-                </span>
-              )}
-            </div>
+  <span className="text-2xl font-bold text-gray-900">
+    LE:{finalPrice}
+  </span>
+
+  {/* Show old price if discounted */}
+  {finalPrice < variantBasePrice && (
+    <span className="text-sm text-gray-600 line-through">
+      LE:{variantBasePrice}
+    </span>
+  )}
+</div>
 
             <div
               className="prose prose-gray max-w-none"
@@ -367,38 +412,46 @@ export default function Show({ product, relatedProducts, categories, auth }) {
                   </span>
                 </h3>
                 <div className="flex gap-3">
-                  {colorAttributes.map((color) => {
-                    const selected = selectedAttributes.color === color.value;
-                    return (
-                      <button
-                        key={color.value}
-                        onClick={() =>
-                          handleAttributeSelect("color", color.value)
-                        }
-                        className={`w-12 h-12 rounded-full border-2 overflow-hidden flex items-center justify-center ${
-                          selected
-                            ? "border-gray-900 ring-2 ring-gray-900"
-                            : "border-gray-300"
-                        }`}
-                      >
-                        {color.image ? (
-                          <img
-                            src={color.image}
-                            alt={color.value}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              backgroundColor: color.hexColor || "#ccc",
-                            }}
-                            className="w-full h-full"
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+  {colorAttributes.map((color) => {
+    const selected = selectedAttributes.color === color.value;
+
+    // Determine which image to show
+    const imageToShow =
+      color.image // variant image
+        ? color.image
+        : product.main_image // product main image
+        ? `/storage/${product.main_image}`
+        : null; // no image available
+
+    return (
+      <button
+        key={color.value}
+        onClick={() => handleAttributeSelect("color", color.value)}
+        className={`w-12 h-12 rounded-full border-2 overflow-hidden flex items-center justify-center ${
+          selected
+            ? "border-gray-900 ring-2 ring-gray-900"
+            : "border-gray-300"
+        }`}
+      >
+        {imageToShow ? (
+          <img
+            src={imageToShow}
+            alt={color.value}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div
+            style={{
+              backgroundColor: color.hexColor || "#ccc",
+            }}
+            className="w-full h-full"
+          />
+        )}
+      </button>
+    );
+  })}
+</div>
+
               </div>
             )}
 
@@ -479,7 +532,7 @@ export default function Show({ product, relatedProducts, categories, auth }) {
                 {!selectedVariant
                   ? "Select Options"
                   : isInWishlist
-                  ? "In Wishlist"
+                  ? ""
                   : ""}
               </button>
             </div>
