@@ -88,7 +88,7 @@ class StripeController extends Controller
 
         $subtotal += $lineTotal;
         $totalDiscount += $lineDiscount;
-
+        
         $lineItems[] = [
             'price_data' => [
                 'currency' => 'egp',
@@ -115,12 +115,15 @@ class StripeController extends Controller
         ]);
     }
 
-    $order->update([
-        'subtotal' => $subtotal,
-        'discount' => $totalDiscount,
-        'total' => $subtotal + ($request->shipping_fee ?? 0),
-    ]);
+    $shipping = (float) $request->shipping_fee ?? 0;
+    $total = $subtotal + $shipping;
+    
 
+    $order->update([
+        'subtotal'      => $subtotal,
+        'discount'      => $totalDiscount,
+        'total_amount'  => $total,
+    ]);
     $session = \Stripe\Checkout\Session::create([
         'payment_method_types' => ['card'],
         'line_items' => $lineItems,
