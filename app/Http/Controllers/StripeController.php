@@ -49,18 +49,22 @@ class StripeController extends Controller
 
     // Create order record
     $order = Order::create([
-        'user_id' => $user->id,
-        'user_address_id' => $defaultAddress->id,
-        'order_number' => 'ORD-' . strtoupper(uniqid()),
-        'subtotal' => 0,
-        'discount' => 0,
-        'tax' => 0,
-        'shipping_cost' => $request->shipping_fee ?? 0,
-        'total_amount' => 0,
-        'payment_gateway' => 'stripe',
-        'payment_status' => 'pending',
-        'total' => 0,
-        'shipping_fee' => $request->shipping_fee ?? 0,
+        'user_id'          => $user->id,
+        'user_address_id'  => $defaultAddress->id,
+        'order_number'     => 'ORD-' . strtoupper(uniqid()),
+        'subtotal'         => 0,
+        'discount'         => 0,
+        'tax'              => 0,
+        'shipping_cost'    => $request->shipping_fee ?? 0,
+        'total_amount'     => 0,
+        'payment_status'   => 'pending',
+        'payment_method'   => 'stripe',
+        'transaction_id'   => null,
+        'shipping_status'  => 'pending',
+        'tracking_number'  => null,
+        'carrier'          => null,
+        'status'           => 'processing',
+        'notes'            => null,
     ]);
 
     $lineItems = [];
@@ -97,6 +101,10 @@ class StripeController extends Controller
             ],
             'quantity' => $quantity,
         ];
+        if ($variant) {
+        // Reduce variant stock
+        $variant->decrement('stock', $quantity);
+        } 
 
         // Optionally, create order items if you track them
         $order->items()->create([

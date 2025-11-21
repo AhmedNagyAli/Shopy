@@ -22,7 +22,7 @@ class CartResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
 
-    protected static ?string $navigationGroup = 'E-commerce';
+    protected static ?string $navigationGroup = 'Sales';
 
     protected static ?int $navigationSort = 2;
 

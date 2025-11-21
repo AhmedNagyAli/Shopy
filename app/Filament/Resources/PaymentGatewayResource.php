@@ -17,7 +17,7 @@ class PaymentGatewayResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
 
-    protected static ?string $navigationGroup = 'Payment Settings';
+    protected static ?string $navigationGroup = 'System';
 
     protected static ?string $navigationLabel = 'Payment Gateways';
 
