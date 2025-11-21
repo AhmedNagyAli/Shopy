@@ -8,13 +8,12 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\StripeController;
 use App\Http\Controllers\UserAddressController;
-use App\Models\Coupon;
-use App\Models\Product;
-use App\Models\ProductVariant;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Stripe\Stripe;
+use Stripe\PaymentIntent;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -67,12 +66,18 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
+Route::post('/checkout/stripe', [StripeController::class, 'createCheckoutSession'])
+    ->name('stripe.create');
+Route::get('/stripe/success/{order}', [StripeController::class, 'success'])
+    ->name('stripe.success');
+
+Route::get('/stripe/cancel', [StripeController::class, 'cancel'])
+    ->name('stripe.cancel');
+
+
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 
-Route::get('test',function(){
-    $user = Auth::user();
-$wishlist = $user->wishlist()->with(['product', 'variant'])->get();
-dd($wishlist);
-
+Route::get('/toast', function () {
+     return Inertia::render('TestToast')->with('success', 'This is a test success toast!');
 });

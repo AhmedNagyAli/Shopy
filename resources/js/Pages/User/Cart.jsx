@@ -96,8 +96,25 @@ export default function CartPage({ gateways: initialGateways }) {
           payment_gateway_id: gateway.id,
         },
       });
-    } else {
-      Swal.fire({
+    } else if (gateway.slug === 'stripe') {
+  router.post(route('stripe.create'), {
+      shipping_fee: appliedShipping,
+      total: total
+  }, {
+      onSuccess: (res) => {
+          const sessionId = res.id; // session.id from backend
+          const stripe = Stripe(import.meta.env.VITE_STRIPE_KEY);
+          stripe.redirectToCheckout({ sessionId });
+      },
+      onError: () => {
+          Swal.fire({
+              icon: "error",
+              title: "Stripe error",
+          });
+      }
+  });
+}else{
+    Swal.fire({
         toast: true,
         icon: "error",
         title: "payment not available for now",
@@ -105,6 +122,7 @@ export default function CartPage({ gateways: initialGateways }) {
         timer: 2000,
       });
     }
+
   };
 
   const getGatewayIcon = (slug) => {

@@ -158,7 +158,7 @@ export default function OrdersIndex({ orders = [] }) {
                       <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
                         <CreditCard className="w-4 h-4 text-green-500" />
                         <span className="font-medium text-gray-700 capitalize">
-                          {order.payment_method.replace(/-/g, " ")}
+                          {order.payment_method}
                         </span>
                       </div>
                       
