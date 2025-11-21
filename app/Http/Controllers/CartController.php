@@ -70,47 +70,116 @@ class CartController extends Controller
     }
      public function getCartItems(Request $request)
     {
-        logger("ffff");
-        $user = Auth::user();
-        
+        $user = Auth::user();    
         if (!$user) {
             return response()->json(['cart' => []]);
         }
 
-        // Eager load relationships to avoid N+1 queries
-        $cartItems = Cart::with([
-            'product',         // eager load product
-            'variant.values',
-            'variant.values.attribute' // load variant attribute values (color/size)
-        ])
-        ->where('user_id', $user->id)
-        ->get();
+        $applyDiscount = function ($price, $discount) {
+    if (!$discount) return $price;
+    if ($discount->type === 'percentage') {
+        return max($price - ($price * $discount->value / 100), 0);
+    } elseif ($discount->type === 'fixed') {
+        return max($price - $discount->value, 0);
+    }
+    return $price;
+};
 
-        return response()->json([
-            'success' => true,
-            'cart' => $cartItems,
-        ]);
+$cartItems = $user->cart()
+    ->with(['product.discounts', 'variant.discounts', 'variant.values.attribute'])
+    ->get()
+    ->map(function ($item) use ($applyDiscount) {
+
+        $variant = $item->variant;
+        $product = $item->product;
+
+        $basePrice = $variant ? $variant->price : $product->price;
+
+        $variantDiscount = $variant?->discounts?->where('is_active', true)?->first();
+        $productDiscount = $product?->discounts?->where('is_active', true)?->first();
+
+        if ($variantDiscount) {
+            $finalPrice = $applyDiscount($basePrice, $variantDiscount);
+        } elseif ($productDiscount) {
+            $finalPrice = $applyDiscount($basePrice, $productDiscount);
+        } else {
+            $finalPrice = $variant?->final_price ?? $basePrice;
+        }
+
+        return [
+            'id' => $item->id,
+            'quantity' => $item->quantity,
+            'product' => $product,
+            'variant' => $variant,
+            'final_price' => $finalPrice, // ⭐ SEND PRICE AFTER DISCOUNT
+        ];
+    });
+
+return response()->json([
+    'cart' => $cartItems
+]);
     }
 
     public function index()
-    {
-        $gateways = PaymentGateway::where('is_active', true)->get();
-        $user = Auth::user();
+{
+    $gateways = PaymentGateway::where('is_active', true)->get();
+    $user = Auth::user();
 
-        $cart = Cart::with([
-            'product',         // eager load product
-            'variant.values',
-            'variant.values.attribute' // load variant attribute values (color/size)
-        ])
-        ->where('user_id', $user->id)
-        ->get();       
+    $applyDiscount = function ($price, $discount) {
+        if (!$discount) return $price;
 
-        return Inertia::render('User/Cart', [
-            'cart' => $cart,
-            'gateways'=>$gateways,
-            
-        ]);
-    }
+        if ($discount->type === 'percentage') {
+            return max($price - ($price * $discount->value / 100), 0);
+        }
+
+        if ($discount->type === 'fixed') {
+            return max($price - $discount->value, 0);
+        }
+
+        return $price;
+    };
+
+    $cart = Cart::with([
+        'product.discounts',
+        'variant.discounts',
+        'variant.values',
+        'variant.values.attribute'
+    ])
+    ->where('user_id', $user->id)
+    ->get()
+    ->map(function ($item) use ($applyDiscount) {
+
+        $variant = $item->variant;
+        $product = $item->product;
+
+        // Base price (variant overrides product)
+        $basePrice = $variant ? $variant->price : $product->price;
+
+        // Get discounts
+        $variantDiscount = $variant?->discounts?->where('is_active', true)?->first();
+        $productDiscount = $product?->discounts?->where('is_active', true)?->first();
+
+        // Apply discount priority: Variant > Product
+        if ($variantDiscount) {
+            $finalPrice = $applyDiscount($basePrice, $variantDiscount);
+        } elseif ($productDiscount) {
+            $finalPrice = $applyDiscount($basePrice, $productDiscount);
+        } else {
+            $finalPrice = $variant?->final_price ?? $basePrice;
+        }
+
+        // Attach final_price to return
+        $item->final_price = $finalPrice;
+
+        return $item;
+    });
+
+    return Inertia::render('User/Cart', [
+        'cart' => $cart,
+        'gateways' => $gateways,
+    ]);
+}
+
     // Update quantity
     public function update(Request $request, $id)
 {

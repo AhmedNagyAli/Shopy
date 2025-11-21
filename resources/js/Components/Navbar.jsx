@@ -215,47 +215,44 @@ export default function Navbar({ categories = [] }) {
         {/* Cart Items */}
         <ul className="divide-y divide-gray-100 max-h-72 overflow-y-auto">
           {cartItems.map((item) => {
-            const price = (item.variant?.final_price ?? item.product?.price) || 0;
-            const total = price * item.quantity;
-            
-            return (
-              <li key={item.id} className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-lg transition-colors">
-                <div className="flex items-start gap-3 min-w-0 flex-1">
-                  <img
-                    src={`/storage/${item.variant?.image || item.product?.main_image || "placeholder.jpg"}`}
-                    alt={item.product?.name}
-                    className="w-14 h-14 object-cover rounded-lg flex-shrink-0 border border-gray-200"
-                  />
-                  <div className="flex flex-col min-w-0 flex-1 max-w-[calc(100%-4rem)]">
-                    {/* Product Name with Proper Truncation */}
-                    <span 
-                      className="text-sm font-semibold truncate"
-                      title={item.product?.name}
-                    >
-                      {item.product?.name}
-                    </span>
-                    
-                    {/* Variant Info with Truncation */}
-                    {item.variant && (
-                      <span className="text-xs text-gray-500 truncate mt-0.5">
-                        {item.variant?.values?.map(v => v.value).join(" / ") || ""}
-                      </span>
-                    )}
-                    
-                    {/* Price and Quantity in one line */}
-                    <div className="flex items-center justify-between mt-1.5">
-                      <span className="text-sm text-gray-700 font-medium">
-                        ${total.toFixed(2)}
-                      </span>
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                        {item.quantity}x
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            );
-          })}
+  const price = item.final_price || 0;
+  const total = price * item.quantity;
+
+  return (
+    <li key={item.id} className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-lg transition-colors">
+      <div className="flex items-start gap-3 min-w-0 flex-1">
+        <img
+          src={`/storage/${item.variant?.image || item.product?.main_image || "placeholder.jpg"}`}
+          alt={item.product?.name}
+          className="w-14 h-14 object-cover rounded-lg flex-shrink-0 border border-gray-200"
+        />
+
+        <div className="flex flex-col min-w-0 flex-1 max-w-[calc(100%-4rem)]">
+          <span className="text-sm font-semibold truncate">
+            {item.product?.name}
+          </span>
+
+          {item.variant && (
+            <span className="text-xs text-gray-500 truncate mt-0.5">
+              {item.variant?.values?.map(v => v.value).join(" / ")}
+            </span>
+          )}
+
+          <div className="flex items-center justify-between mt-1.5">
+            <span className="text-sm text-gray-700 font-medium">
+              ${total.toFixed(2)}  {/* 👈 NOW SHOWS DISCOUNTED PRICE */}
+            </span>
+
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+              {item.quantity}x
+            </span>
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+})}
+
         </ul>
 
         {/* Cart Summary */}
@@ -264,11 +261,11 @@ export default function Navbar({ categories = [] }) {
           <span>
             $
             {cartItems
-              .reduce(
-                (sum, item) => sum + ((item.variant?.final_price ?? item.product?.price) || 0) * item.quantity,
-                0
-              )
-              .toFixed(2)}
+  .reduce(
+    (sum, item) => sum + item.final_price * item.quantity,
+    0
+  )
+  .toFixed(2)}
           </span>
         </div>
 

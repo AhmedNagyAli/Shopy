@@ -5,9 +5,10 @@ import { useState } from "react";
 
 export default function CartPage({ gateways: initialGateways }) {
   const { cart = [], settings } = usePage().props;
+
   const shippingFee = parseFloat(settings?.shipping_fee || 0);
   const freeShippingThreshold = parseFloat(settings?.free_shipping_thershold || 0);
-  
+
   const [showGatewayModal, setShowGatewayModal] = useState(false);
   const [selectedGateway, setSelectedGateway] = useState(null);
 
@@ -31,45 +32,45 @@ export default function CartPage({ gateways: initialGateways }) {
           title: "Item removed from cart",
         });
       },
-      onError: () => {
+      onError: () =>
         toast.fire({
           icon: "error",
           title: "Failed to remove item",
-        });
-      },
+        }),
     });
   };
 
   const handleUpdateQuantity = (id, type) => {
-    router.post(`/cart/items/${id}/update`, { type }, {
-      onSuccess: () => {
-        window.dispatchEvent(new Event("cart:updated"));
-        toast.fire({
-          icon: "success",
-          title: type === "increase" ? "Quantity increased" : "Quantity decreased",
-        });
-      },
-      onError: () => {
-        toast.fire({
-          icon: "error",
-          title: "Failed to update quantity",
-        });
-      },
-    });
+    router.post(
+      `/cart/items/${id}/update`,
+      { type },
+      {
+        onSuccess: () => {
+          window.dispatchEvent(new Event("cart:updated"));
+          toast.fire({
+            icon: "success",
+            title: type === "increase" ? "Quantity increased" : "Quantity decreased",
+          });
+        },
+        onError: () =>
+          toast.fire({
+            icon: "error",
+            title: "Failed to update quantity",
+          }),
+      }
+    );
   };
 
+  // ⭐ FIXED: Use discounted price from backend
   const subtotal = cart.reduce(
-    (sum, item) =>
-      sum + (item.variant?.final_price ?? item.product?.price) * item.quantity,
+    (sum, item) => sum + item.final_price * item.quantity,
     0
   );
 
-  // ✅ Apply free shipping rule
   const qualifiesForFreeShipping = subtotal >= freeShippingThreshold;
   const appliedShipping = qualifiesForFreeShipping ? 0 : shippingFee;
   const total = subtotal + appliedShipping;
 
-  // ✅ Open gateway selection modal
   const handleCheckoutClick = () => {
     if (activeGateways.length === 0) {
       Swal.fire({
@@ -82,83 +83,50 @@ export default function CartPage({ gateways: initialGateways }) {
     setShowGatewayModal(true);
   };
 
-  // ✅ Handle gateway selection and proceed to payment
   const handleGatewaySelect = (gateway) => {
     setSelectedGateway(gateway);
     setShowGatewayModal(false);
-    
-    if (gateway.slug === 'cash-on-delivery') {
-      // For Cash on Delivery, redirect to order placement page
-      router.visit(route('order.create'), {
+
+    if (gateway.slug === "cash-on-delivery") {
+      router.visit(route("order.create"), {
         data: {
           shipping_fee: appliedShipping,
           total: total,
           payment_gateway: gateway.slug,
-          payment_gateway_id: gateway.id
-        }
+          payment_gateway_id: gateway.id,
+        },
       });
     } else {
       Swal.fire({
-                toast: true,
-                //position: "top-end",
-                icon: "error",
-                title: "payment not available for now",
-                showConfirmButton: false,
-                timer: 2000,
-              });
-      
-      // For other payment methods, proceed to payment final page
-      // router.post(
-      //   route("order.place"),
-      //   { 
-      //     shipping_fee: appliedShipping, 
-      //     total: total,
-      //     payment_gateway: gateway.slug,
-      //     payment_gateway_id: gateway.id
-      //   },
-      //   {
-      //     onSuccess: () => {
-      //       Swal.fire({
-      //         icon: "success",
-      //         title: "Redirecting to payment...",
-      //         showConfirmButton: false,
-      //         timer: 1500,
-      //       });
-      //     },
-      //     onError: (errors) => {
-      //       Swal.fire({
-      //         icon: "error",
-      //         title: "Failed to proceed to payment",
-      //         text: errors.message || "Please try again.",
-      //       });
-      //     },
-      //   }
-      // );
+        toast: true,
+        icon: "error",
+        title: "payment not available for now",
+        showConfirmButton: false,
+        timer: 2000,
+      });
     }
   };
 
-  // ✅ Get gateway icon based on slug
   const getGatewayIcon = (slug) => {
     const icons = {
       stripe: "💳",
       paypal: "🔵",
       razorpay: "💰",
-      'cash-on-delivery': "📦",
-      'bank-transfer': "🏦",
+      "cash-on-delivery": "📦",
+      "bank-transfer": "🏦",
       mollie: "🦋",
       square: "⬜",
     };
     return icons[slug] || "💳";
   };
 
-  // ✅ Get gateway description
   const getGatewayDescription = (slug) => {
     const descriptions = {
       stripe: "Pay with credit card via Stripe",
       paypal: "Pay with PayPal account",
       razorpay: "Secure payment with Razorpay",
-      'cash-on-delivery': "Pay when you receive your order",
-      'bank-transfer': "Direct bank transfer",
+      "cash-on-delivery": "Pay when you receive your order",
+      "bank-transfer": "Direct bank transfer",
       mollie: "European payment solutions",
       square: "Secure payment with Square",
     };
@@ -185,15 +153,19 @@ export default function CartPage({ gateways: initialGateways }) {
                   alt={item.product?.name}
                   className="w-20 h-20 object-cover rounded-lg"
                 />
+
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900">{item.product?.name}</h3>
+
                   {item.variant && (
                     <p className="text-sm text-gray-500">
-                      {item.variant?.values.map((v) => v.value).join(" / ")}
+                      {item.variant.values.map((v) => v.value).join(" / ")}
                     </p>
                   )}
+
+                  {/* ⭐ FIXED: Show discounted price */}
                   <p className="text-gray-700 font-semibold">
-                    ${(item.variant?.final_price ?? item.product?.price)}
+                    ${item.final_price.toFixed(2)}
                   </p>
                 </div>
 
@@ -228,10 +200,12 @@ export default function CartPage({ gateways: initialGateways }) {
           {/* Summary */}
           <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200 h-fit">
             <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+
             <div className="flex justify-between mb-2">
               <span className="text-gray-600">Subtotal</span>
               <span>${subtotal.toFixed(2)}</span>
             </div>
+
             <div className="flex justify-between mb-2">
               <span className="text-gray-600">Shipping</span>
               {qualifiesForFreeShipping ? (
@@ -240,6 +214,7 @@ export default function CartPage({ gateways: initialGateways }) {
                 <span>${shippingFee.toFixed(2)}</span>
               )}
             </div>
+
             <div className="flex justify-between font-bold text-gray-900 text-lg border-t pt-2">
               <span>Total</span>
               <span>${total.toFixed(2)}</span>
@@ -268,11 +243,9 @@ export default function CartPage({ gateways: initialGateways }) {
         </div>
       )}
 
-      {/* Payment Gateway Selection Modal */}
       {showGatewayModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-1000 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            {/* Header */}
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-gray-900">Select Payment Method</h3>
@@ -286,7 +259,6 @@ export default function CartPage({ gateways: initialGateways }) {
               <p className="text-gray-600 mt-2">Choose how you'd like to pay</p>
             </div>
 
-            {/* Gateway List */}
             <div className="p-6 space-y-3">
               {activeGateways.map((gateway) => (
                 <button
@@ -294,25 +266,20 @@ export default function CartPage({ gateways: initialGateways }) {
                   onClick={() => handleGatewaySelect(gateway)}
                   className="w-full p-4 border border-gray-200 rounded-xl hover:border-gray-900 hover:bg-gray-100 transition-all duration-200 text-left flex items-center gap-4 group"
                 >
-                  <div className="text-2xl">
-                    {getGatewayIcon(gateway.slug)}
-                  </div>
+                  <div className="text-2xl">{getGatewayIcon(gateway.slug)}</div>
+
                   <div className="flex-1">
-                    <div className="font-semibold text-gray-900 group-hover:text-gray-950">
-                      {gateway.name}
-                    </div>
+                    <div className="font-semibold text-gray-900">{gateway.name}</div>
                     <div className="text-sm text-gray-600">
                       {getGatewayDescription(gateway.slug)}
                     </div>
                   </div>
-                  <div className="text-gray-400 group-hover:text-gray-600">
-                    →
-                  </div>
+
+                  <div className="text-gray-400 group-hover:text-gray-600">→</div>
                 </button>
               ))}
             </div>
 
-            {/* Footer */}
             <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
               <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                 <Shield size={16} />
@@ -322,21 +289,6 @@ export default function CartPage({ gateways: initialGateways }) {
           </div>
         </div>
       )}
-
-      {/* Loading Overlay when processing */}
-      {/* {selectedGateway && selectedGateway.slug !== 'cash-on-delivery' && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-8 text-center max-w-sm w-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Processing...
-            </h3>
-            <p className="text-gray-600">
-              Redirecting to {selectedGateway.name} payment
-            </p>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 }
