@@ -13,13 +13,22 @@ export default function ProductCard({ product }) {
     const finalPrice = defaultVariant?.final_price ?? variantPrice;
 
 
-    // ✅ Image
-    const imageUrl =
-        defaultVariant?.image
-            ? `/storage/${defaultVariant.image}`
-            : product.main_image
-                ? `/storage/${product.main_image}`
-                : '/images/placeholder.jpg';
+    // ✅ Get latest image from product.images relation
+const latestImage =
+    product.images && product.images.length > 0
+        ? `/storage/${product.images[product.images.length - 1].image_path}`
+        : null;
+
+// ✅ Final image fallback chain
+const imageUrl =
+    defaultVariant?.image
+        ? `/storage/${defaultVariant.image}`
+        : product.main_image
+        ? `/storage/${product.main_image}`
+        : latestImage
+        ? latestImage
+        : '/images/placeholder.jpg';
+
 
     // ✅ Unique variants by color (deduplicated)
     const colorVariants = [
