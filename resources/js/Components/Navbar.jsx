@@ -17,6 +17,7 @@ export default function Navbar({ categories = [] }) {
   const cartBtnRef = useRef(null);
   const menuRef = useRef(null);
   const btnRef = useRef(null);
+  const marqueeRef = useRef(null);
 
   // Fetch cart items function
   const fetchCartItems = async () => {
@@ -30,6 +31,23 @@ export default function Navbar({ categories = [] }) {
       console.error("Failed to fetch cart:", err);
     }
   };
+   // Marquee effect
+  useEffect(() => {
+    const marquee = marqueeRef.current;
+    if (!marquee) return;
+
+    let start = 0;
+    const speed = 1; // pixels per frame
+
+    const animate = () => {
+      start -= speed;
+      if (Math.abs(start) >= marquee.scrollWidth / 2) start = 0;
+      marquee.style.transform = `translateX(${start}px)`;
+      requestAnimationFrame(animate);
+    };
+
+    requestAnimationFrame(animate);
+  }, []);
 
   useEffect(() => {
     if (!isAuth) return;
@@ -97,7 +115,21 @@ export default function Navbar({ categories = [] }) {
   };
 
   return (
-    <nav className="w-full bg-white text-gray-800 shadow-lg sticky top-0 z-50 border-b border-gray-200">
+    <div>
+      {/* Top Section Offer */}
+      {settings?.top_section_offer && (
+        <div className="bg-red-900 text-white overflow-hidden h-10 flex items-center relative">
+          <div
+            ref={marqueeRef}
+            className="whitespace-nowrap flex items-center"
+            style={{ willChange: "transform" }}
+          >
+            <span className="px-4">{settings.top_section_offer}</span>
+            <span className="px-4">{settings.top_section_offer}</span>
+          </div>
+        </div>
+      )}
+      <nav className="w-full bg-white text-gray-800 shadow-lg sticky top-0 z-50 border-b border-gray-200">
       {/* Top Row */}
       <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
         {/* Left: User avatar + search */}
@@ -391,5 +423,7 @@ export default function Navbar({ categories = [] }) {
         </div>
       )}
     </nav>
+    </div>
+    
   );
 }

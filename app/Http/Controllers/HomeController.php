@@ -17,11 +17,12 @@ class HomeController extends Controller
             'variants.values',
             'images',
         ])
-       ->withCount('orderItems')
+        ->withCount('orderItems')
         //->orderBy('orders_count', 'desc')
         ->take(20)
         ->get();
-
+        
+        
         // 🔥 MEN PRODUCTS
         $menProducts = Product::whereHas('categories', fn($q) => 
             $q->where('slug', 'men')
@@ -30,6 +31,8 @@ class HomeController extends Controller
         ->take(20)
         ->get();
 
+
+
         // 🔥 WOMEN PRODUCTS
         $womenProducts = Product::whereHas('categories', fn($q) => 
             $q->where('slug', 'women')
@@ -37,6 +40,7 @@ class HomeController extends Controller
         ->with(['variants.discounts','images'])
         ->take(20)
         ->get();
+        //dd($topProducts,$menProducts,$womenProducts);
 
         // Categories
         $categories = Category::with(['products' => function ($q) {
