@@ -11,29 +11,34 @@ class CreateSetting extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Process the value based on type
-        return self::processValueData($data);
+        return $this->processValueData($data);
     }
 
-    protected static function processValueData(array $data): array
+    protected function processValueData(array $data): array
     {
-        $type = $data['type'] ?? 'text';
-        
-        switch ($type) {
-            case 'boolean':
-                $data['value'] = (bool) ($data['value'] ?? false);
-                break;
-            case 'number':
-                $data['value'] = isset($data['value']) && is_numeric($data['value']) ? $data['value'] : null;
-                break;
-            case 'json':
-                $data['value'] = isset($data['value']) && is_array($data['value']) ? $data['value'] : [];
-                break;
-            case 'text':
-            case 'textarea':
-                $data['value'] = $data['value'] ?? null;
-                break;
-            // For image/images, the file upload component handles the storage
+        // Convert multiple images to JSON array
+        if ($data['type'] === 'images' && isset($data['value']) && is_array($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+        // Convert image string
+        if ($data['type'] === 'image' && isset($data['value']) && is_string($data['value'])) {
+            $data['value'] = $data['value'];
+        }
+
+        // Booleans
+        if ($data['type'] === 'boolean') {
+            $data['value'] = (bool)$data['value'];
+        }
+
+        // Numbers
+        if ($data['type'] === 'number') {
+            $data['value'] = (float)$data['value'];
+        }
+
+        // JSON (KeyValue)
+        if ($data['type'] === 'json' && is_array($data['value'])) {
+            $data['value'] = $data['value'];
         }
 
         return $data;

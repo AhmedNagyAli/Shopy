@@ -74,7 +74,7 @@ class SettingResource extends Resource
                                     ->image()
                                     ->directory('settings')
                                     ->preserveFilenames()
-                                    ->maxSize(2048)
+                                    //->maxSize(2048)
                                     ->helperText('Upload a single image (max 2MB)')
                                     ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']),
                             ],
@@ -85,7 +85,7 @@ class SettingResource extends Resource
                                     ->multiple()
                                     ->directory('settings')
                                     ->preserveFilenames()
-                                    ->maxSize(2048)
+                                    //->maxSize(2048)
                                     ->maxFiles(10)
                                     ->helperText('Upload multiple images (max 10 files, 2MB each)')
                                     ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']),

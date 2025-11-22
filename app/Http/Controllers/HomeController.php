@@ -10,64 +10,46 @@ use Inertia\Inertia;
 class HomeController extends Controller
 {
     public function index()
-{
-    $products = Product::with([
-        'variants.discounts',
-        'variants.values',
-        'variants.values.attribute',
-        'images',
-        'categories',
-    ])
-    ->latest()
-    ->take(8)
-    ->get()
-    ->map(function ($product) {
+    {
+        // 🔥 TOP PRODUCTS — products with most orders
+        $topProducts = Product::with([
+            'variants.discounts',
+            'variants.values',
+            'images',
+        ])
+       ->withCount('orderItems')
+        //->orderBy('orders_count', 'desc')
+        ->take(20)
+        ->get();
 
-        $applyDiscount = function ($price, $discount) {
-            if (!$discount) return $price;
+        // 🔥 MEN PRODUCTS
+        $menProducts = Product::whereHas('categories', fn($q) => 
+            $q->where('slug', 'men')
+        )
+        ->with(['variants.discounts','images'])
+        ->take(20)
+        ->get();
 
-            if ($discount->type === 'percentage') {
-                return max($price - ($price * ($discount->value / 100)), 0);
-            }
+        // 🔥 WOMEN PRODUCTS
+        $womenProducts = Product::whereHas('categories', fn($q) => 
+            $q->where('slug', 'women')
+        )
+        ->with(['variants.discounts','images'])
+        ->take(20)
+        ->get();
 
-            if ($discount->type === 'fixed') {
-                return max($price - $discount->value, 0);
-            }
+        // Categories
+        $categories = Category::with(['products' => function ($q) {
+            $q->latest()->take(1);
+        }])
+        ->take(10)
+        ->get();
 
-            return $price;
-        };
-
-        // Compute final price for each variant
-        $product->variants->each(function ($variant) use ($applyDiscount, $product) {
-
-            $basePrice = $variant->price ?? $product->price;
-
-            $activeDiscount = $variant->discounts
-                ?->where('is_active', true)
-                ?->first();
-
-            $finalPrice = $activeDiscount
-                ? $applyDiscount($basePrice, $activeDiscount)
-                : $basePrice;
-
-            $variant->original_price = $basePrice;
-            $variant->final_price = $finalPrice;
-            $variant->price_before_discount = $basePrice;
-        });
-
-        return $product;
-    });
-
-    $categories = Category::with(['products' => function ($q) {
-        $q->latest()->take(1);
-    }])
-    ->take(10)
-    ->get();
-
-    return Inertia::render('Home/Home', [
-        'products'   => $products,
-        'categories' => $categories,
-    ]);
-}
-
+        return Inertia::render('Home/Home', [
+            'topProducts' => $topProducts,
+            'menProducts' => $menProducts,
+            'womenProducts' => $womenProducts,
+            'categories' => $categories,
+        ]);
+    }
 }

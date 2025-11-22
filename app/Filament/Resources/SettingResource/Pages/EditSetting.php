@@ -10,22 +10,33 @@ class EditSetting extends EditRecord
 {
     protected static string $resource = SettingResource::class;
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\DeleteAction::make(),
-        ];
-    }
-
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        // Process the value based on type
-        return \App\Filament\Resources\SettingResource\Pages\CreateSetting::processValueData($data);
+        return $this->processValueData($data);
     }
 
-    protected function afterSave(): void
+    protected function processValueData(array $data): array
     {
-        // Clear settings cache if you're using caching
-        // cache()->forget('app_settings');
+        if ($data['type'] === 'images' && is_array($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+        if ($data['type'] === 'image' && is_string($data['value'])) {
+            $data['value'] = $data['value'];
+        }
+
+        if ($data['type'] === 'boolean') {
+            $data['value'] = (bool)$data['value'];
+        }
+
+        if ($data['type'] === 'number') {
+            $data['value'] = (float)$data['value'];
+        }
+
+        if ($data['type'] === 'json' && is_array($data['value'])) {
+            $data['value'] = $data['value'];
+        }
+
+        return $data;
     }
 }
