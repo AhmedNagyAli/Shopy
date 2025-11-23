@@ -6,7 +6,7 @@ import Swal from "sweetalert2";
 import MainLayout from "@/Layouts/MainLayout";
 import { router } from "@inertiajs/react";
 
-export default function Show({ product, relatedProducts, categories, auth }) {
+export default function Show({ product, relatedProducts, categories, auth , menCategories, womenCategories,topCategories}) {
   const user = auth?.user;
 
   const allImages = useMemo(() => {
@@ -332,7 +332,10 @@ else {
     : product.stock === 0;
 
   return (
-    <MainLayout categories={categories}>
+    <MainLayout categories={categories}
+                menCategories={menCategories}
+                womenCategories={womenCategories}
+                topCategories={topCategories}>
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left: Images */}

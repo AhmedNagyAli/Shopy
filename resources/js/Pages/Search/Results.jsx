@@ -3,9 +3,13 @@ import { Head } from "@inertiajs/react";
 import ProductCard from "@/Components/ProductCard";
 import MainLayout from "@/Layouts/MainLayout";
 
-export default function Results({ query, products, categories, settings }) {
+export default function Results({ query, products, categories, settings, menCategories, womenCategories,topCategories }) {
   return (
-    <MainLayout categories={categories} settings={settings}>
+    <MainLayout categories={categories}
+     settings={settings}
+     menCategories={menCategories}
+                womenCategories={womenCategories}
+                topCategories={topCategories}>
       <Head title={`Search results for "${query}"`} />
 
       <div className="max-w-7xl mx-auto px-6 py-8">

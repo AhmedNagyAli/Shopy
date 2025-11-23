@@ -4,7 +4,9 @@ import MainLayout from "../../Layouts/MainLayout";
 import ProductCard from "../../Components/ProductCard";
 import Header from "../../Components/Header";
 
-export default function Home({ topProducts, menProducts, womenProducts, categories }) {
+export default function Home({ topProducts, menProducts, womenProducts, categories, menCategories, womenCategories,topCategories }) {
+    
+    console.log(menCategories,womenCategories);
     const { settings } = usePage().props;
 
     const createSlider = (products) => {
@@ -157,7 +159,10 @@ export default function Home({ topProducts, menProducts, womenProducts, categori
     };
 
     return (
-        <MainLayout categories={categories}>
+        <MainLayout  categories={categories}
+                menCategories={menCategories}
+                womenCategories={womenCategories}
+                topCategories={topCategories}>
             <Header settings={settings} />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
                 {renderCategories()}
