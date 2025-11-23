@@ -11,39 +11,53 @@ class HomeController extends Controller
 {
     public function index()
     {
-        // 🔥 TOP PRODUCTS — products with most orders
-        $topProducts = Product::with([
+        $topProducts = Product::whereHas('categories', fn($q) => 
+            $q->where('slug', 'men')
+        )
+        ->with([
             'variants.discounts',
             'variants.values',
             'images',
+            'discounts',
         ])
-        ->withCount('orderItems')
-        //->orderBy('orders_count', 'desc')
         ->take(20)
         ->get();
         
-        
-        // 🔥 MEN PRODUCTS
-        $menProducts = Product::whereHas('categories', fn($q) => 
+                $menProducts = Product::whereHas('categories', fn($q) => 
             $q->where('slug', 'men')
         )
-        ->with(['variants.discounts','images'])
+        ->with([
+            'variants.discounts',
+            'variants.values',
+            'images',
+            'discounts',
+        ])
         ->take(20)
         ->get();
 
 
 
-        // 🔥 WOMEN PRODUCTS
         $womenProducts = Product::whereHas('categories', fn($q) => 
             $q->where('slug', 'women')
-        )
-        ->with(['variants.discounts','images'])
+        )->with([
+            'variants.discounts',
+            'variants.values',
+            'images',
+            'discounts',
+        ])
         ->take(20)
         ->get();
         //dd($topProducts,$menProducts,$womenProducts);
 
         // Categories
-        $categories = Category::with(['products' => function ($q) {
+        $categories = Category::with([
+            'products.discounts',
+                'products.images',
+                'products.variants',
+                'products.variants.values',
+                'products.variants.discounts',
+                'products.variants.values.attribute',
+            'products' => function ($q) {
             $q->latest()->take(1);
         }])
         ->get();

@@ -644,7 +644,7 @@ export default function Navbar({ categories = [], menCategories = [], womenCateg
                             </button>
                             <button
                               onClick={() => {
-                                router.get("/checkout");
+                                router.get("/cart");
                                 setCartOpen(false);
                               }}
                               className="flex-1 bg-blue-600 text-white py-2 sm:py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
@@ -810,7 +810,6 @@ export default function Navbar({ categories = [], menCategories = [], womenCateg
         </div>
       )}
 
-      {/* Add this CSS to hide scrollbar on mobile categories */}
       <style jsx>{`
         .hide-scrollbar {
           -ms-overflow-style: none;

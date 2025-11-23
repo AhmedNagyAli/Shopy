@@ -13,7 +13,11 @@ class CategoryController extends Controller
         $category = Category::where('slug', $slug)
             ->with([
                 'products',
+                'products.discounts',
+                'products.images',
+                'products.variants',
                 'products.variants.values',
+                'products.variants.discounts',
                 'products.variants.values.attribute',
             ]) // load all products for that category
             ->firstOrFail();
