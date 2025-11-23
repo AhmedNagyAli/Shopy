@@ -42,6 +42,7 @@ class SettingResource extends Resource
                                 'textarea' => 'Long Text',
                                 'image' => 'Single Image',
                                 'images' => 'Multiple Images',
+                                'video' => 'Video',
                                 'boolean' => 'Yes/No',
                                 'number' => 'Number',
                                 'json' => 'JSON Data',
@@ -74,9 +75,8 @@ class SettingResource extends Resource
                                     ->image()
                                     ->directory('settings')
                                     ->preserveFilenames()
-                                    //->maxSize(2048)
-                                    ->helperText('Upload a single image (max 2MB)')
-                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']),
+                                    ->helperText('Upload a single image (max 5MB)')
+                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']),
                             ],
                             'images' => [
                                 Forms\Components\FileUpload::make('value')
@@ -85,10 +85,19 @@ class SettingResource extends Resource
                                     ->multiple()
                                     ->directory('settings')
                                     ->preserveFilenames()
-                                    //->maxSize(2048)
                                     ->maxFiles(10)
-                                    ->helperText('Upload multiple images (max 10 files, 2MB each)')
-                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']),
+                                    ->helperText('Upload multiple images (max 10 files, 5MB each)')
+                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']),
+                            ],
+                            'video' => [
+                                Forms\Components\FileUpload::make('value')
+                                    ->label('Video')
+                                    ->directory('settings/videos')
+                                    ->preserveFilenames()
+                                    ->helperText('Upload a video file (max 50MB)')
+                                    ->acceptedFileTypes(['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'])
+                                    ->hint('Supported formats: MP4, WebM, OGG, MOV, AVI')
+                                    ->hintColor('primary'),
                             ],
                             'boolean' => [
                                 Forms\Components\Toggle::make('value')
@@ -135,6 +144,7 @@ class SettingResource extends Resource
                         'textarea', 'longtext' => 'blue',
                         'image' => 'success',
                         'images' => 'info',
+                        'video' => 'danger',
                         'boolean' => 'warning',
                         'number', 'integer', 'decimal' => 'primary',
                         'json', 'array' => 'purple',
@@ -148,17 +158,22 @@ class SettingResource extends Resource
                     ->boolean()
                     ->getStateUsing(fn (Setting $record) => 
                         $record->value === true || $record->value === 'true' || $record->value === 1
-                ),
-                //    ->visible(fn (Setting $record) => self::detectValueType($record) === 'boolean'),
+                    ),
 
                 Tables\Columns\ImageColumn::make('value_image')
-                    ->label('Image')
+                    ->label('Media')
                     ->getStateUsing(fn (Setting $record) => 
-                        is_string($record->value) && (Str::startsWith($record->value, 'settings/') || Str::contains($record->value, '.'))
+                        self::detectValueType($record) === 'image' && is_string($record->value) && (Str::startsWith($record->value, 'settings/') || Str::contains($record->value, '.'))
                             ? Storage::url($record->value) 
                             : null
-            ),
-                    //->visible(fn (Setting $record) => self::detectValueType($record) === 'image'),
+                    )
+                    ->size(40),
+
+                Tables\Columns\IconColumn::make('is_video')
+                    ->label('Video')
+                    ->icon('heroicon-o-video-camera')
+                    ->color('danger')
+                    ->getStateUsing(fn (Setting $record) => self::detectValueType($record) === 'video'),
 
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
@@ -172,6 +187,7 @@ class SettingResource extends Resource
                         'textarea' => 'Long Text',
                         'image' => 'Image',
                         'images' => 'Multiple Images',
+                        'video' => 'Video',
                         'boolean' => 'Boolean',
                         'number' => 'Number',
                         'json' => 'JSON',
@@ -186,12 +202,15 @@ class SettingResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\DeleteAction::make()
                     ->before(function (Tables\Actions\DeleteAction $action, Setting $record) {
                         // Delete associated files when deleting the setting
-                        if (self::detectValueType($record) === 'image' && $record->value) {
+                        $type = self::detectValueType($record);
+                        
+                        if (in_array($type, ['image', 'video']) && $record->value) {
                             Storage::delete($record->value);
-                        } elseif (self::detectValueType($record) === 'images' && is_array($record->value)) {
+                        } elseif ($type === 'images' && is_array($record->value)) {
                             foreach ($record->value as $file) {
                                 Storage::delete($file);
                             }
@@ -203,9 +222,11 @@ class SettingResource extends Resource
                     Tables\Actions\DeleteBulkAction::make()
                         ->before(function (Tables\Actions\DeleteBulkAction $action, $records) {
                             foreach ($records as $record) {
-                                if (self::detectValueType($record) === 'image' && $record->value) {
+                                $type = self::detectValueType($record);
+                                
+                                if (in_array($type, ['image', 'video']) && $record->value) {
                                     Storage::delete($record->value);
-                                } elseif (self::detectValueType($record) === 'images' && is_array($record->value)) {
+                                } elseif ($type === 'images' && is_array($record->value)) {
                                     foreach ($record->value as $file) {
                                         Storage::delete($file);
                                     }
@@ -252,6 +273,10 @@ class SettingResource extends Resource
             return 'Images: ' . (is_array($value) ? count($value) . ' files' : 'N/A');
         }
 
+        if ($type === 'video') {
+            return 'Video: ' . (is_string($value) ? basename($value) : 'N/A');
+        }
+
         if ($type === 'json') {
             return 'JSON: ' . (is_array($value) ? count($value) . ' items' : 'N/A');
         }
@@ -296,8 +321,15 @@ class SettingResource extends Resource
         }
 
         if (is_string($value)) {
+            // Check if it's a video path
+            if (Str::contains($value, '.') && (Str::startsWith($value, 'settings/videos/') || 
+                Str::contains($value, ['.mp4', '.webm', '.ogg', '.mov', '.avi']))) {
+                return 'video';
+            }
+
             // Check if it's an image path
-            if (Str::contains($value, '.') && (Str::startsWith($value, 'settings/') || Str::contains($value, ['jpg', 'jpeg', 'png', 'gif', 'webp']))) {
+            if (Str::contains($value, '.') && (Str::startsWith($value, 'settings/') || 
+                Str::contains($value, ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']))) {
                 return 'image';
             }
 

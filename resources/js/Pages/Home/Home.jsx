@@ -200,22 +200,24 @@ export default function Home({ topProducts, menProducts, womenProducts, categori
         </section>
     );
 
-    // Modern Category Circles (unchanged)
+    // Modern Fancy Category Circles with Hover Effects
     const renderCategories = () => {
         const filteredCategories = categories.filter(
             (c) => c.products && c.products.length > 0 && !["men", "women", "kids"].includes(c.name.toLowerCase())
         );
 
         return (
-            <section className="py-12">
-                <div className="text-center mb-12">
-                    {/* <h2 className="text-4xl font-bold text-gray-900 mb-4">Shop by Category</h2> */}
-                    <p className="text-gray-900 text-xl font-bold max-w-2xl mx-auto">
-                        Discover our collections designed for every style and occasion
+            <section className="py-16">
+                <div className="text-center mb-16">
+                    <p className="text-gray-900 text-3xl font-bold max-w-2xl mx-auto mb-4">
+                        Discover Our Collections
+                    </p>
+                    <p className="text-gray-600 text-lg max-w-3xl mx-auto">
+                        Curated for every style and occasion
                     </p>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 lg:gap-12">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-10 lg:gap-14">
                     {filteredCategories.map((category) => {
                         const productWithImage = category.products?.find(product => {
                             const hasMainImage = product.main_image;
@@ -243,56 +245,80 @@ export default function Home({ topProducts, menProducts, womenProducts, categori
                             <a
                                 key={category.id}
                                 href={`/categories/${category.slug}`}
-                                className="group flex flex-col items-center text-center"
+                                className="group flex flex-col items-center text-center relative"
                             >
+                                {/* Outer Glow Effect */}
+                                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl group-hover:blur-2xl group-hover:scale-110 transition-all duration-500 opacity-0 group-hover:opacity-100 -z-10" />
+                                
+                                {/* Main Circle Container */}
                                 <div className="relative">
+                                    {/* Animated Border Ring */}
                                     <div className="
-                                        w-32 h-32 sm:w-36 sm:h-36 lg:w-40 lg:h-40 
+                                        absolute inset-0 rounded-full 
+                                        bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
+                                        group-hover:animate-spin
+                                        transition-all duration-1000
+                                        opacity-0 group-hover:opacity-100
+                                        scale-110
+                                    " />
+                                    
+                                    {/* Inner Circle with Image */}
+                                    <div className="
+                                        relative
+                                        w-32 h-32 sm:w-36 sm:h-36 lg:w-44 lg:h-44 xl:w-48 xl:h-48
                                         rounded-full overflow-hidden 
-                                        bg-gradient-to-br from-gray-50 to-gray-100
-                                        border-2 border-gray-200
-                                        group-hover:border-indigo-500 
-                                        group-hover:shadow-xl
-                                        group-hover:scale-105
+                                        bg-gradient-to-br from-white to-gray-50
+                                        border-4 border-white
+                                        shadow-2xl shadow-gray-300/50
+                                        group-hover:shadow-2xl group-hover:shadow-indigo-300/50
+                                        group-hover:scale-110
                                         transition-all duration-500 ease-out
-                                        shadow-lg shadow-gray-200/50
+                                        z-10
                                     ">
                                         {categoryImage ? (
                                             <img 
                                                 src={categoryImage} 
                                                 alt={category.name}
-                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                                                 loading="lazy"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                                                <div className="text-gray-400 text-sm font-medium">
+                                                <div className="text-gray-400 text-2xl font-bold">
                                                     {category.name.charAt(0).toUpperCase()}
                                                 </div>
                                             </div>
                                         )}
+                                        
+                                        {/* Overlay Gradient */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                     </div>
-                                    
-                                    <div className="
-                                        absolute inset-0 rounded-full 
-                                        border-2 border-transparent 
-                                        group-hover:border-indigo-400/30 
-                                        group-hover:scale-110
-                                        transition-all duration-500
-                                        pointer-events-none
-                                    " />
+
                                 </div>
                                 
-                                <h3 className="mt-6 text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">
-                                    {category.name}
-                                </h3>
-                                
-                                {/* <p className="mt-2 text-sm text-gray-500 group-hover:text-gray-700 transition-colors duration-300">
-                                    {category.products?.length || 0} products
-                                </p> */}
+                                {/* Category Text */}
+                                <div className="mt-8 space-y-2">
+                                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-300 group-hover:scale-105 transform">
+                                        {category.name}
+                                    </h3>
+                                    
+                                    <div className="
+                                        w-8 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 
+                                        rounded-full mx-auto
+                                        group-hover:w-12
+                                        transition-all duration-500
+                                    " />
+
+                                </div>
                             </a>
                         );
                     })}
+                </div>
+
+                {/* Background Decorative Elements */}
+                <div className="absolute left-0 right-0 -z-10 opacity-10">
+                    <div className="absolute top-1/4 left-10 w-72 h-72 bg-purple-300 rounded-full blur-3xl animate-pulse" />
+                    <div className="absolute top-1/2 right-10 w-96 h-96 bg-indigo-300 rounded-full blur-3xl animate-pulse delay-1000" />
                 </div>
             </section>
         );

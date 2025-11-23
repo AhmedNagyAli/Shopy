@@ -23,7 +23,7 @@ class HomeController extends Controller
         ->take(20)
         ->get();
         
-                $menProducts = Product::whereHas('categories', fn($q) => 
+        $menProducts = Product::whereHas('categories', fn($q) => 
             $q->where('slug', 'men')
         )
         ->with([

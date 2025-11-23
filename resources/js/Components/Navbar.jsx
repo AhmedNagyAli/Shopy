@@ -281,9 +281,6 @@ export default function Navbar({ categories = [], menCategories = [], womenCateg
                     onMouseEnter={handleDropdownEnterContent}
                     onMouseLeave={handleDropdownLeaveContent}
                   >
-                    <div className="px-3 sm:px-4 py-2 border-b border-gray-100">
-                      <h3 className="text-sm font-semibold text-gray-900">Men's Collection</h3>
-                    </div>
                     <div className="py-2 max-h-60 overflow-y-auto">
                       {menCategories.map((category) => (
                         <a
@@ -326,9 +323,6 @@ export default function Navbar({ categories = [], menCategories = [], womenCateg
                     onMouseEnter={handleDropdownEnterContent}
                     onMouseLeave={handleDropdownLeaveContent}
                   >
-                    <div className="px-3 sm:px-4 py-2 border-b border-gray-100">
-                      <h3 className="text-sm font-semibold text-gray-900">Women's Collection</h3>
-                    </div>
                     <div className="py-2 max-h-60 overflow-y-auto">
                       {womenCategories.map((category) => (
                         <a
