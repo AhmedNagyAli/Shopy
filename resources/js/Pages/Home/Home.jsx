@@ -6,7 +6,6 @@ import Header from "../../Components/Header";
 
 export default function Home({ topProducts, menProducts, womenProducts, categories, menCategories, womenCategories,topCategories }) {
     
-    console.log(menCategories,womenCategories);
     const { settings } = usePage().props;
 
     const createSlider = (products) => {
