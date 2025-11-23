@@ -141,6 +141,7 @@ return response()->json([
 
     $cart = Cart::with([
         'product.discounts',
+        'product.images',
         'variant.discounts',
         'variant.values',
         'variant.values.attribute'

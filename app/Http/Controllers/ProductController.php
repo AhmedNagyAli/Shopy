@@ -25,8 +25,14 @@ class ProductController extends Controller
             $q->whereIn('categories.id', $product->categories->pluck('id'));
         })
         ->where('id', '!=', $product->id)
-        ->with('categories')
-         ->with('variants')
+        ->with([
+        'discounts',
+        'variants.values',
+        'variants.values.attribute', 
+        'images',
+        'categories',
+        'variants'
+        ])
         ->take(8)
         ->get();
     $categories = Category::with(['products' => function ($q) {
@@ -71,9 +77,7 @@ class ProductController extends Controller
 }
     public function search(Request $request)
 {
-    //dd($request->all());
     $q = $request->input('q');
-
     $products = Product::
     with([
         'discounts',
