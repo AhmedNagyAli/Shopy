@@ -550,7 +550,7 @@ export default function Navbar({ categories = [], menCategories = [], womenCateg
                 {cartOpen && (
                   <div
                     ref={cartRef}
-                    className="absolute right-0 mt-2 w-screen max-w-xs sm:max-w-sm md:max-w-md bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[80vh] overflow-hidden"
+                    className="absolute right-0 mt-2 w-screen max-w-xs sm:max-w-sm md:max-w-md bg-white shadow-2xl border border-gray-200 z-50 max-h-[80vh] overflow-hidden"
                   >
                     <div className="p-3 sm:p-4 border-b border-gray-100 flex justify-between items-center">
                       <h3 className="text-lg font-semibold text-gray-900">Shopping Cart</h3>
@@ -567,7 +567,7 @@ export default function Navbar({ categories = [], menCategories = [], womenCateg
                         <ShoppingBag size={40} className="mx-auto text-gray-300 mb-3" />
                         <p className="text-gray-500 mb-3 text-sm sm:text-base">Your cart is empty</p>
                         <a 
-                          href="/products" 
+                          href="/" 
                           className="text-blue-600 hover:text-blue-700 text-sm font-medium inline-block"
                           onClick={() => setCartOpen(false)}
                         >
@@ -626,13 +626,13 @@ export default function Navbar({ categories = [], menCategories = [], womenCateg
                                 .toFixed(2)}
                             </span>
                           </div>
-                          <div className="flex space-x-2">
+                          <div className="flex flex-col gap-2">
                             <button
                               onClick={() => {
                                 router.get("/cart");
                                 setCartOpen(false);
                               }}
-                              className="flex-1 bg-gray-900 text-white py-2 sm:py-3 rounded-lg hover:bg-gray-800 transition-colors font-medium text-sm"
+                              className="flex-1 bg-gray-900 text-white py-2 sm:py-3 hover:bg-zinc-800 transition-colors font-medium text-sm"
                             >
                               View Cart
                             </button>
@@ -641,7 +641,7 @@ export default function Navbar({ categories = [], menCategories = [], womenCateg
                                 router.get("/cart");
                                 setCartOpen(false);
                               }}
-                              className="flex-1 bg-blue-600 text-white py-2 sm:py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+                              className="flex-1 bg-gray-950 text-white py-2 sm:py-3 hover:bg-zinc-800 transition-colors font-medium text-sm"
                             >
                               Checkout
                             </button>
